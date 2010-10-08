@@ -380,7 +380,7 @@ class CarPod(Pod):
 
 class GravityPod(Pod):
 
-    g = 2
+    g = 1
 
     def __init__(self,nSensor,sensorRange,brain,col):
         Pod.__init__(self,nSensor,sensorRange,brain,col)
@@ -487,8 +487,9 @@ class Simulation:
             keyinput = pg.key.get_pressed()
 
             if keyinput[pg.K_ESCAPE] or pg.event.peek(pg.QUIT):
-                raise SystemExit
-
+                #raise SystemExit
+                pg.display.quit()
+                break
 
             self.world.step(self.dt)
             self.screen.fill((0,0,0))
