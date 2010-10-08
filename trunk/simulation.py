@@ -380,7 +380,7 @@ class CarPod(Pod):
 
 class GravityPod(Pod):
 
-    g = 1
+    g = 2
 
     def __init__(self,nSensor,sensorRange,brain,col):
         Pod.__init__(self,nSensor,sensorRange,brain,col)
