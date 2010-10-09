@@ -22,7 +22,7 @@ class LearningControl:
     velocityZeroed = False
 
     def cancelAcceleration(self,state,accel):
-        # Essentially a binary search for the thrust that is sufficient to cancel out the acceleration due to gravity.
+        # Essentially a search for the thrust that is sufficient to cancel out the acceleration due to gravity.
         if accel > 0:
             # Accelerating down, increase thrust
             if self.lastAccel < 0:
