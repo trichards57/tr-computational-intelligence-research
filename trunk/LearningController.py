@@ -8,7 +8,7 @@ from simulation import *
 # If too high, the pod will drift when it is supposed to be hovering.
 # The larger the number, the faster it will drift.
 # If too small, cancelAcceleration and cancelVelocity will take longer.
-zeroThreshold = 1e-6
+zeroThreshold = 1e-4
 # Setting this to a larger number makes the position finding system less
 # accurate but faster.
 # Setting this to a smaller number makes the position finding system less
