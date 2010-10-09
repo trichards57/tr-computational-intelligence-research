@@ -3,7 +3,7 @@ from simulation import *
 #     get the gravity pod to hover at y=yHover
 #
 
-zeroThreshold = 1e-9  # Any larger number than this and things break. Not sure why yet.
+zeroThreshold = 1e-10  # Any larger number than this and things break. Not sure why yet.
 
 class LearningControl:
 
@@ -18,8 +18,14 @@ class LearningControl:
     totalDistance = 0
     directionToCenter = 0
 
+    movingForceDiviser = 1
+
     hoverThrustFound = False
     velocityZeroed = False
+
+    halfWay = False
+    stopping = False
+    stopped = False
 
     def cancelAcceleration(self,state,accel):
         # Essentially a search for the thrust that is sufficient to cancel out the acceleration due to gravity.
@@ -37,18 +43,53 @@ class LearningControl:
                     self.thrustStep /= 2
                 self.hoverThrust = self.hoverThrust - self.thrustStep
 
-    def cancelVelocity(self,state,accel,dt):
-        speed = state.dydt
-        if fabs(accel / dt) / 100 >= fabs(state.dydt):
-            # You're going to slow down too fast and overshoot. Decrease the correcting thrust.
-            self.speedStep /= 2
+    def resetCancelVelocity(self):
+        # Resets variables used to bring the pod to a complete halt.
+        self.speedStep = 0.1
+        self.stopped = False
 
-        print "Speed Step : ", self.speedStep
-                
-        if state.dydt > 0:
-            self.maneuverThrust = self.speedStep
+    def cancelVelocity(self,state,accel,dt):
+        if fabs(state.dydt) < zeroThreshold:
+            self.stopped = True
+            self.maneuverThrust = 0
         else:
-            self.maneuverThrust = -self.speedStep
+            if fabs(accel / dt) / 100 >= fabs(state.dydt):
+                # You're going to slow down too fast and overshoot. Decrease the correcting thrust.
+                self.speedStep /= 2
+
+            print "Speed Step : ", self.speedStep
+                    
+            if state.dydt > 0:
+                self.maneuverThrust = self.speedStep
+            else:
+                self.maneuverThrust = -self.speedStep
+
+    def verticalMove(self, distanceRemaining, state, accel, dt):
+        print "Distance remaining : ", distanceRemaining
+
+        if fabs(distanceRemaining) < fabs(self.totalDistance / 2):
+            # We're over half way.
+            self.halfWay = True
+        
+        if self.halfWay == False:
+            # Are we less than half way?
+            print "First Half Move"
+            self.maneuverThrust = self.directionToCenter
+        else:
+            if fabs(distanceRemaining) < 5:
+                # Close enough to position.  Come to a halt.
+                print "Stopping"
+                self.stopping = True
+
+            if self.stopping == True:                        
+                if self.stopped:
+                    self.stopping = False
+                else:
+                    self.cancelVelocity(state, accel, dt)
+            else:
+                print "Second Half Move"
+                # We're more than half way. Start slowing down
+                self.maneuverThrust = -self.directionToCenter
 
     def process(self,sensor,state,dt):
 
@@ -71,12 +112,9 @@ class LearningControl:
         else:
             if self.velocityZeroed == False:
                 # We can hover safely. Now correct vertical drift.
-                if fabs(state.dydt) < zeroThreshold:
-                    # Close enough to 0 to make no difference.
+                if self.stopped:
                     print "Velocity now 0"
                     self.velocityZeroed = True
-                    # Stop maneuvering.
-                    self.maneuverThrust = 0
                 else:
                     print "Zeroing velocity"
                     self.cancelVelocity(state, accel, dt)
@@ -84,8 +122,8 @@ class LearningControl:
                 # Position centre vertically (ish)
                 # Assuming we're pointing straight up (everything else is screwed anyway if we aren't.)
 
-                distanceToTop = sensor[0].val * sensor[0].range
-                distanceToBottom = sensor[20].val * sensor[20].range
+                distanceToTop = sensor[0].val
+                distanceToBottom = sensor[20].val
                 totalDistance = distanceToBottom + distanceToTop
                 # Distance to the point between half way between where the top sensor is reading and where the bottom sensor is reading
                 distanceToMiddle = totalDistance / 2 - distanceToBottom
@@ -94,31 +132,42 @@ class LearningControl:
                     # We've only just started moving. Work out how far to go.
                     self.totalDistance = distanceToMiddle
 
+                    # Get the largest possible moving force that
+                    # can be canceled in an equal amount of time
+                    # without rotating the pod.
+
+                    # Moving force can't be greater than the hover thrust,
+                    # otherwise the speeding and slowing thrusts will
+                    # unbalanced
+                    movingForce = self.hoverThrust
+                    # The sum of the moving force and the hover thrust
+                    # cannot be greater than 1, otherwise the thruster
+                    # will max out and the speeding and slowing thrusts
+                    # will be unbalanced
+                    if movingForce + self.hoverThrust > 1:
+                        movingForce = 1 - self.hoverThrust
+
                     if self.totalDistance > 0:
                         # We have to go up.
-                        self.directionToCenter = 0.1
+                        self.directionToCenter = fabs(movingForce) / self.movingForceDiviser # Must be +ve
                     else:
                         # We have to go down.
-                        self.directionToCenter = -0.1
+                        self.directionToCenter = -fabs(movingForce) / self.movingForceDiviser # Must be -ve
 
                     self.distanceMeasured = True
-                    self.speedStep = 0.1 # Prepare for bringing to a full stop later.
+                    self.resetCancelVelocity()
+                    self.halfWay = False
 
-
-                if fabs(distanceToMiddle) > fabs(self.totalDistance / 2):
-                    # Are we less than half way?
-                    self.maneuverThrust = self.directionToCenter
-                    print "First Half Move"
+                if self.stopped == False:
+                    self.verticalMove(distanceToMiddle, state, accel, dt)
                 else:
-                    print "Second Half Move"
-                    if fabs(state.dydt) < 1:
-                        # Probably close enough to position.  Come to a halt.
-                        self.cancelVelocity(state, accel, dt)
-                        
-                    else:
-                        # We're more than half way. Start slowing down
-                        self.maneuverThrust = -self.directionToCenter
-
+                    print "Stopped."
+                    if fabs(distanceToMiddle) > 5:
+                        # Start the middle finding process again, we're not quite close enough.
+                        self.distanceMeasured = False
+                        # But go a bit slower to be more accurate.
+                        self.movingForceDiviser *= 2
+                
         control.up = self.hoverThrust + self.maneuverThrust
 
         print "Thrust : ", control.up
@@ -134,7 +183,7 @@ class LearningControl:
 dt          =.1
 brain       = LearningControl()
 nSensors    = 40
-sensorRange = 2000
+sensorRange = 5000
 pod         = GravityPod(nSensors,sensorRange,brain,(255,0,0))
 pods        = [pod]
 world       = World("freefall_world.txt",pods)
