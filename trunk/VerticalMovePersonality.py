@@ -28,7 +28,7 @@ class VerticalMovePersonality:
     # The thrust used to move the pod
     maneuverThrust = 0
     # The maximum speed the pod will move at
-    maximumSpeed = 2
+    maximumSpeed = 4
 
     # Enumeration for flight profiles
     continuousSpeedFlight = 1 # Fly at a set speed
@@ -81,12 +81,14 @@ class VerticalMovePersonality:
             self.stopper.process(state)
         elif self.flightProfile == self.continuousSpeedFlight:
             if fabs(distanceRemaining) < 4:
+                # Close enough. Stop the pod.
                 self.flightProfile = self.stopFlight
                 self.stopper.process(state)
             # Flight at a constant speed of self.maximumSpeed
             if fabs(state.dydt) < self.maximumSpeed:
                 # Not yet at flight speed. Accelerate/Decelerate as quickly as possible.
-                self.control.up = direction
+                self.control.up = direction * 0.1 + self.hoverThrust
             else:
                 # At flight speed. Maintain zero acceleration
                 self.control.up = self.hoverThrust
+                # TODO : Implement continuous thrust profile
