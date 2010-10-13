@@ -1,6 +1,7 @@
 from simulation import *
 from HoverFindPersonality import *
 from StopPersonality import *
+from collections import deque
 
 # Setting this to a larger number makes the system more tolerant of residual
 # velocities.
@@ -35,12 +36,17 @@ class LearningControl:
     accelThrust = 0
     # The diviser used to tweak accelThrust to allow more precise movement in verticalMove.
     accelThrustDiviser = 1
+    # Used during the initialisation to flag if the hover thrust search has started.
+    hoverThrustSearching = False
     # Used during initialisation to flag if the hover thrust has been found.
     hoverThrustFound = False
     # Used during initialisation to flag if the pod has come to a halt before the first maneuver.
     velocityZeroed = False
     # Current personality that is running the pod
     personality = None
+
+    # List of personalities to be used
+    personalities = deque()
 
     ## Cancel Velocity Variables
     # The step used during cancelVelocity to modify maneuverThrust.
@@ -108,91 +114,97 @@ class LearningControl:
 
         control=Control()
 
+        # Calculate extra state variables
+        # TODO : Move this straight in to the state variable when accel is nolonger used.
         accel = (state.dydt - self.lastDyDt)/dt
 
+        # Output state
         print "Acceleration : ", accel
         print "Speed : ", state.dydt
         print "Position : ", state.y
 
-        if self.hoverThrustFound == False:
-            # We've just started. Work out the thrust needed to counter gravity.
-            if self.personality != None and self.personality.done == True:
-                # The personality is finished.
+        # Add my variables to state
+        state.d2ydt2 = accel
+        state.last_d2ydt2 = self.lastAccel
+        state.dt = dt
+
+        # Is there a current personality that is working?
+        if self.personality != None and self.personality.done == False:
+            # Run the personality
+            self.personality.process(state)
+        elif self.personality == None or self.personality.done == True:
+            # The current personality is done, or there isn't one.
+            if len(self.personalities) > 0:
+                # A personality is queued up to run.
+                # Set it as the active personality.
+                self.personality = self.personalities.pop
+                # Run the first cycle.
+                self.personality.process(state)
+            elif self.hoverThrustSearching == False:
+                # We've just started. Make a HoverFindPersonality the active personality
+                self.personality = HoverFindPersonality()
+                # Run the first cycle.
+                self.personality.process(state)
+                # We are now searching for the hover thrust.
+                self.hoverThrustSearching = True
+            elif self.hoverThrustFound == False:
+                # Store the hover thrust for later use.
                 self.hoverThrust = self.personality.hoverThrust
-                print "Hover thrust found : ", self.personality.hoverThrust
+                # Now bring the pod to a stop. Make a StopPersonality the active personality
+                self.personality = StopPersonality(self.hoverThrust)
+                # Run the first cycle.
+                self.personality.process(state)
+                # We've found the hover thrust.
                 self.hoverThrustFound = True
-                self.personality = None
             else:
-                state.d2ydt2 = accel
-                state.last_d2ydt2 = self.lastAccel
-                if self.personality == None:
-                    self.personality = HoverFindPersonality()
-                self.personality.control = control
-                self.personality.process(state)
-        elif self.velocityZeroed == False:
-                # We can hover safely. Now correct vertical drift.
-            if self.personality != None and self.personality.done == True:
-                print "Velocity now 0"
-                self.velocityZeroed = True
-                self.personality = None
-            else:
-                print "Zeroing velocity"
-                state.dt = dt
-                state.d2ydt2 = accel
-                if self.personality == None:
-                    self.personality = StopPersonality()
-                    self.personality.hoverThrust = self.hoverThrust
-                self.personality.control = control
-                self.personality.process(state)
-        else:
-            # Position centre vertically (ish) to give us room to move later.
-            # Assuming we're pointing straight up (everything else is screwed anyway if we aren't.)
+                # Position centre vertically (ish) to give us room to move later.
+                # Assuming we're pointing straight up (everything else is screwed anyway if we aren't.)
 
-            distanceToTop = sensor[0].val
-            distanceToBottom = sensor[20].val
-            totalDistance = distanceToBottom + distanceToTop
-            # Distance to the point between half way between where the top sensor is reading and where the bottom sensor is reading
-            distanceToMiddle = totalDistance / 2 - distanceToBottom
+                distanceToTop = sensor[0].val
+                distanceToBottom = sensor[20].val
+                totalDistance = distanceToBottom + distanceToTop
+                # Distance to the point between half way between where the top sensor is reading and where the bottom sensor is reading
+                distanceToMiddle = totalDistance / 2 - distanceToBottom
 
-            if self.distanceMeasured == False:
-                # We've only just started moving. Work out how far to go.
-                self.totalDistance = distanceToMiddle
+                if self.distanceMeasured == False:
+                    # We've only just started moving. Work out how far to go.
+                    self.totalDistance = distanceToMiddle
 
-                # Get the largest possible moving force that
-                # can be canceled in an equal amount of time
-                # without rotating the pod.
+                    # Get the largest possible moving force that
+                    # can be canceled in an equal amount of time
+                    # without rotating the pod.
 
-                # Moving force can't be greater than the hover thrust,
-                # otherwise the speeding and slowing thrusts will
-                # unbalanced
-                movingForce = self.hoverThrust
-                # The sum of the moving force and the hover thrust
-                # cannot be greater than 1, otherwise the thruster
-                # will max out and the speeding and slowing thrusts
-                # will be unbalanced
-                if movingForce + self.hoverThrust > 1:
-                    movingForce = 1 - self.hoverThrust
+                    # Moving force can't be greater than the hover thrust,
+                    # otherwise the speeding and slowing thrusts will
+                    # unbalanced
+                    movingForce = self.hoverThrust
+                    # The sum of the moving force and the hover thrust
+                    # cannot be greater than 1, otherwise the thruster
+                    # will max out and the speeding and slowing thrusts
+                    # will be unbalanced
+                    if movingForce + self.hoverThrust > 1:
+                        movingForce = 1 - self.hoverThrust
 
-                if self.totalDistance > 0:
-                    # We have to go up.
-                    self.accelThrust = fabs(movingForce) / self.accelThrustDiviser # Must be +ve
+                    if self.totalDistance > 0:
+                        # We have to go up.
+                        self.accelThrust = fabs(movingForce) / self.accelThrustDiviser # Must be +ve
+                    else:
+                        # We have to go down.
+                        self.accelThrust = -fabs(movingForce) / self.accelThrustDiviser # Must be -ve
+
+                    self.distanceMeasured = True
+                    self.resetCancelVelocity()
+                    self.halfWay = False
+
+                if self.stopped == False:
+                    self.verticalMove(distanceToMiddle, state, accel, dt)
                 else:
-                    # We have to go down.
-                    self.accelThrust = -fabs(movingForce) / self.accelThrustDiviser # Must be -ve
-
-                self.distanceMeasured = True
-                self.resetCancelVelocity()
-                self.halfWay = False
-
-            if self.stopped == False:
-                self.verticalMove(distanceToMiddle, state, accel, dt)
-            else:
-                print "Stopped."
-                if fabs(distanceToMiddle) > positionThreshold:
-                    # Start the destination finding process again, we're not quite close enough.
-                    self.distanceMeasured = False
-                    # But go a bit slower to be more accurate.
-                    self.accelThrustDiviser *= 2
+                    print "Stopped."
+                    if fabs(distanceToMiddle) > positionThreshold:
+                        # Start the destination finding process again, we're not quite close enough.
+                        self.distanceMeasured = False
+                        # But go a bit slower to be more accurate.
+                        self.accelThrustDiviser *= 2
 
         #control.up = self.hoverThrust + self.maneuverThrust
 
