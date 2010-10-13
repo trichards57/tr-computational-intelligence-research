@@ -228,17 +228,17 @@ class World:
             pod.update_sensors(self)
 
     def draw(self,screen):
-        #if not self.blind:
-        for wall in self.walls:
-            if "start" in wall.name:
+        if not self.blind:
+         for wall in self.walls:
+                if "start" in wall.name:
                     col=(255,255,0)
-            elif "end" in wall.name:
+                elif "end" in wall.name:
                     col=(0,255,255)
-            else:
-                col=(0,0,255)
+                else:
+                    col=(0,0,255)
 
-            for seg in wall.segments:
-                pg.draw.line(screen,col,(seg[0],seg[1]),(seg[2],seg[3]),6)
+                for seg in wall.segments:
+                    pg.draw.line(screen,col,(seg[0],seg[1]),(seg[2],seg[3]),6)
 
         for pod in self.pods:
             pod.draw(screen)
@@ -333,7 +333,7 @@ class CarPod(Pod):
         Pod.__init__(self,nSensor,sensorRange,brain,col)
         self.mass  = 20
         self.brake = 0
-        self.steer_factor=.002
+        self.steer_factor=.05
         self.thrust_max=200
         self.slip_speed_thresh=80
         self.slip_speed_max=200
@@ -358,7 +358,7 @@ class CarPod(Pod):
             self.y = yNext
             self.vel += (self.control.up-self.control.down)*self.thrust_max/self.mass-self.damp*self.vel*self.vel
             self.collide = False
-            self.ang += (1.0-self.slip)*(-self.control.right+self.control.left)*self.vel*self.steer_factor
+            self.ang += (1.0-self.slip)*(-self.control.right+self.control.left)*self.vel*self.steer_factor*dt
             avel=abs(self.vel)
             if avel > self.slip_speed_max:
                 self.slip=1
@@ -373,7 +373,7 @@ class CarPod(Pod):
             self.dxdt = 0
             self.vel  = 0
             self.collide = True
-            self.ang += (-self.control.right+self.control.left)*self.vel*self.steer_factor
+            self.ang += (-self.control.right+self.control.left)*self.vel*self.steer_factor*dt
 
 
  
@@ -448,10 +448,11 @@ class Simulation:
 
         pg.init()
         self.dt=dt
-        self.slowMotionFactor=1
+        self.slowMotionFactor=1.0
         self.world = world
         dim_world = (self.world.rect.width+20, self.world.rect.height+20)
-
+        self.frameskipfactor=1
+        self.frameskipcount=1
 
         self.screen = pg.Surface(dim_world) #
 
@@ -477,23 +478,31 @@ class Simulation:
         clock = pg.time.Clock()
         frameRate=1.0/self.dt/self.slowMotionFactor
 
-    
-  
        # the event loop also loops the animation code
         while True:
 
-            clock.tick(frameRate)
+            self.frameskipcount -= 1
+
+            display= self.frameskipcount == 0 and self.frameskipfactor != 0
+
+            if display:
+                clock.tick(frameRate)
+                self.frameskipcount=self.frameskipfactor
+
             pg.event.pump()
             keyinput = pg.key.get_pressed()
 
             if keyinput[pg.K_ESCAPE] or pg.event.peek(pg.QUIT):
-                #raise SystemExit
                 pg.display.quit()
                 break
+                # raise SystemExit
+
 
             self.world.step(self.dt)
-            self.screen.fill((0,0,0))
-            self.world.draw(self.screen)
-            zz=pg.transform.scale(self.screen,self.dim_window)
-            self.display.blit(zz,(0,0))
-            pg.display.flip()
+            if display:
+                self.screen.fill((0,0,0))
+                self.world.draw(self.screen)
+                zz=pg.transform.scale(self.screen,self.dim_window)
+                self.display.blit(zz,(0,0))
+                pg.display.flip()
+            

@@ -17,6 +17,9 @@ class StopPersonality:
     # Has the Personality achieved it's goal (in this case, made velocity zero)?
     done = False
 
+    def __init__(self, hoverThrust):
+        self.hoverThrust = hoverThrust
+
     def process(self, state):
         if fabs(state.dydt) < self.zeroThreshold:
             self.done = True
