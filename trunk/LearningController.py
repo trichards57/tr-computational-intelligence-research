@@ -29,14 +29,6 @@ class LearningControl:
     ## Current State Variables
     # Stores the value of thrust required to cancel out the acceleration due to gravity
     hoverThrust = 0
-    # The amount of extra thrust to apply. Used while trying to maneuver.
-    maneuverThrust = 0
-    # Used during maneuvers to flag when the maneuver has started.
-    distanceMeasured = False
-    # The thrust used by verticalMove to accelerate and then decelerate.
-    accelThrust = 0
-    # The diviser used to tweak accelThrust to allow more precise movement in verticalMove.
-    accelThrustDiviser = 1
     # Used during the initialisation to flag if the hover thrust search has started.
     hoverThrustSearching = False
     # Used during initialisation to flag if the hover thrust has been found.
@@ -48,71 +40,8 @@ class LearningControl:
 
     # Current personality that is running the pod
     personality = None
-
     # List of personalities to be used
     personalities = deque()
-
-    ## Cancel Velocity Variables
-    # The step used during cancelVelocity to modify maneuverThrust.
-    speedStep = 0.1
-    # Used by cancelVelocity to flag when the pod has stopped.
-    stopped = False
-
-    ## Vertical Move Variables    
-    # The total distance of the maneuver. Used to work out when to decelerate.
-    totalDistance = 0
-    # Used during maneuvers to flag when the maneuver is over half way
-    halfWay = False
-    # Used during maneuvers to flag when the maneuver is stopping
-    stopping = False
-
-    def resetCancelVelocity(self):
-        # Resets variables used to bring the pod to a complete halt.
-        self.speedStep = 0.1
-        self.stopped = False
-
-    def cancelVelocity(self,state,accel,dt):
-        if fabs(state.dydt) < zeroThreshold:
-            self.stopped = True
-            self.maneuverThrust = 0
-        else:
-            if fabs(accel / dt) / 100 >= fabs(state.dydt):
-                # You're going to slow down too fast and overshoot. Decrease the correcting thrust.
-                self.speedStep /= 2
-
-            print "Speed Step : ", self.speedStep
-                    
-            if state.dydt > 0:
-                self.maneuverThrust = self.speedStep
-            else:
-                self.maneuverThrust = -self.speedStep
-
-    def verticalMove(self, distanceRemaining, state, accel, dt):
-        print "Distance remaining : ", distanceRemaining
-
-        if fabs(distanceRemaining) < fabs(self.totalDistance / 2):
-            # We're over half way.
-            self.halfWay = True
-        
-        if self.halfWay == False:
-            # Are we less than half way?
-            print "First Half Move"
-            self.maneuverThrust = self.accelThrust
-        else:
-            if fabs(distanceRemaining) < positionThreshold:
-                # Close enough to position.  Come to a halt.
-                print "Stopping"
-                self.stopping = True
-
-            if self.stopping == True:                        
-                if self.stopped:
-                    self.stopping = False
-                else:
-                    self.cancelVelocity(state, accel, dt)
-            else:
-                print "Second Half Move"
-                # We're more than half way. Start slowing down
-                self.maneuverThrust = -self.accelThrust
 
     def process(self,sensor,state,dt):
 
@@ -141,7 +70,7 @@ class LearningControl:
             if len(self.personalities) > 0:
                 # A personality is queued up to run.
                 # Set it as the active personality.
-                self.personality = self.personalities.pop
+                self.personality = self.personalities.pop()
                 # Run the first cycle.
                 self.personality.process(state)
             elif self.hoverThrustSearching == False:
@@ -172,6 +101,11 @@ class LearningControl:
 
                 # Make a VerticalMovePersonality the active personality
                 self.personality = VerticalMovePersonality(self.hoverThrust, state, centerHeight)
+                # Queue up two more personalities to test movement to and fro
+                backToStartMove = VerticalMovePersonality(self.hoverThrust, state, bottomPosition - (passageHeight / 4))
+                backToCenterMove = VerticalMovePersonality(self.hoverThrust, state, centerHeight)
+                self.personalities.appendleft(backToStartMove)
+                self.personalities.appendleft(backToCenterMove)
                 # Run the first cycle
                 self.personality.process(state)
                 # We have started to center.
