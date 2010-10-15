@@ -110,10 +110,10 @@ class LearningControl:
                 # Make a VerticalMovePersonality the active personality
                 self.personality = VerticalMovePersonality(self.hoverThrust, state, centerHeight)
                 # Queue up two more personalities to test movement to and fro
-                #backToStartMove = VerticalMovePersonality(self.hoverThrust, state, bottomPosition - (passageHeight / 4))
-                #backToCenterMove = VerticalMovePersonality(self.hoverThrust, state, centerHeight)
-                #self.personalities.appendleft(backToStartMove)
-                #self.personalities.appendleft(backToCenterMove)
+                backToStartMove = VerticalMovePersonality(self.hoverThrust, state, bottomPosition - (passageHeight / 4))
+                backToCenterMove = VerticalMovePersonality(self.hoverThrust, state, centerHeight)
+                self.personalities.appendleft(backToStartMove)
+                self.personalities.appendleft(backToCenterMove)
                 # Run the first cycle
                 self.personality.process(state)
                 # We have started to center.
