@@ -28,7 +28,7 @@ class VerticalMovePersonality:
     # The thrust used to move the pod
     maneuverThrust = 0
     # The maximum speed the pod will move at
-    maximumSpeed = 4
+    maximumSpeed = 10
 
     # Enumeration for flight profiles
     continuousSpeedFlight = 1 # Fly at a set speed
