@@ -26,13 +26,21 @@ class HorizontalMoveLearnerPersonality:
     slowed = False
     stopping2 = False
     stoppingDone2 = False
-    waiting = 0
+    waiting = False
+    accelWait = 0
+    decelWait = 0
 
     rotateThrust = 0.0
+    rotateTime = 0
 
-    def __init__(self, hoverThrust, rotateThrust):
+    file = None
+
+    def __init__(self, hoverThrust, rotateThrust, rotateTime):
         self.hoverThrust = hoverThrust
         self.rotateThrust = rotateThrust
+        self.rotateTime = rotateTime
+        #self.file.write(',Start accelerating,,Stop accelerating,,Start decelerating,,Stop decelerating\n')
+        #self.file.write('Turn thrust,Time step,Start Turn 1 Velocity, Stop Turn 1 Velocity, Start Turn 2 Velocity, Stop Turn 2 Velocity, Wait, Start Turn 3 Velocity, Stop Turn 3 Velocity, Start Turn 4 Velocity, Stop Turn 4 Velocity, Final\n')
 
     def accelerateRotateLeft(self, thrust):
         self.control.left = thrust
@@ -49,17 +57,18 @@ class HorizontalMoveLearnerPersonality:
     def process(self, state):
         if self.turning == False:
             # Start turn to accelerate
+            self.file = open('learningData.csv', 'a')
             self.accelerateRotateRight(self.rotateThrust)
             self.turning = True
-            print self.turning
+            self.file.write(str(self.rotateThrust) + ',' + str(self.rotateTime) + ',' + str(state.dt) + ',' + str(state.dxdt) + ',')
         elif self.turnDone == False:
             # Stop turn to accelerate
             self.accelerateRotateLeft(self.rotateThrust)
             self.turnDone = True
-        elif self.waiting < 100:
-            # Wait for 10 seconds
+        elif self.accelWait < self.rotateTime:
+            # Allow the pod to accelerate
             self.constantRotate()
-            self.waiting += 1
+            self.accelWait += 1
         elif self.stopping == False:
             # Start turn to stop accelerating
             self.accelerateRotateLeft(self.rotateThrust)
@@ -68,6 +77,11 @@ class HorizontalMoveLearnerPersonality:
             # Stop turn to stop accelerating
             self.accelerateRotateRight(self.rotateThrust)
             self.stoppingDone = True
+        elif self.waiting == False:
+            # Get the final speed
+            self.constantRotate()
+            self.file.write(str(state.dxdt) + '\n')
+            self.waiting = True
         elif self.slowing == False:
             # Start turn to decelerate
             self.accelerateRotateLeft(self.rotateThrust)
@@ -76,8 +90,10 @@ class HorizontalMoveLearnerPersonality:
             # Stop turn to decelerate
             self.accelerateRotateRight(self.rotateThrust)
             self.slowed = True
-            # Wait
-            self.waiting = 0
+        elif self.decelWait < self.rotateTime:
+            # Allow the pod to decelerate
+            self.constantRotate()
+            self.decelWait += 1
         elif self.stopping2 == False:
             # Start turn to stop decelerating
             self.accelerateRotateRight(self.rotateThrust)
@@ -90,6 +106,9 @@ class HorizontalMoveLearnerPersonality:
             # Done
             self.done = True
             self.constantRotate()
+            self.file.close()
+
+        print "Turn Test"
 
         # Work out thrust required to hover. Force in the horizontal direction causes the acceleration
         self.control.up = self.hoverThrust / cos(state.ang - pi)
