@@ -49,6 +49,7 @@ class VerticalMovePersonality(Personality):
             self.maneuverThrust = 1 - hoverThrust
 
     def process(self, state):
+        print "Vertical Move"
         # How far do we have left to go?
         distanceRemaining = self.destinationY - state.y
         print "Destination : ", self.destinationY

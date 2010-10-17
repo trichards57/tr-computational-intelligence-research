@@ -80,6 +80,7 @@ class HorizontalMovePersonality(Personality):
 
 
     def process(self, state):
+        print "Horizontal Move"
         # How far have we got left to go?
         distanceRemaining = self.destinationX - state.x
         print "Destination : ", self.destinationX
@@ -139,6 +140,7 @@ class HorizontalMovePersonality(Personality):
             else:
                 self.flightProfile = self.stopFlight
                 self.constantRotate()
+                self.done = True
                 print "OTHER"
 
             self.control.up = self.hoverThrust / cos(state.ang - pi)
