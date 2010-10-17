@@ -8,7 +8,7 @@ class HoverFindPersonality:
     # If too small, cancelAcceleration and cancelVelocity will take longer.
     zeroThreshold = 1e-4
     # Stores the value of thrust required to cancel out the acceleration due to gravity
-    hoverThrust = 0
+    hoverThrust = 0.2
     # The step used during cancelAcceleration to modify cancelThrust.
     thrustStep = 0.5
     # The Control object that needs to be changed
@@ -18,6 +18,7 @@ class HoverFindPersonality:
     done = False
 
     def process(self, state):
+        print "Finding Hover"
         if fabs(state.d2ydt2) < self.zeroThreshold:
             self.done = True
         else:

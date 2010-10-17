@@ -21,6 +21,7 @@ class StopPersonality:
         self.hoverThrust = hoverThrust
 
     def process(self, state):
+        print "Stopping"
         if fabs(state.dydt) < self.zeroThreshold:
             self.done = True
             self.maneuverThrust = 0
