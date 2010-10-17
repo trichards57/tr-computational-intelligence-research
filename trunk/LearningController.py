@@ -1,3 +1,4 @@
+from HorizontalMovePersonality import HorizontalMovePersonality
 from simulation import *
 from HoverFindPersonality import *
 from StopPersonality import *
@@ -39,7 +40,8 @@ class LearningControl:
     # Used during initialisation to flag if the pod has been position equidistant from the top and bottom walls sensed.
     positionCenterStarted = False
     # Used for the state machine to make sure it doesn't try to restart the turning.
-    startTurningTest = False
+    startTurningTest = True
+    horizontalMoveStarted = False
 
     # Current personality that is running the pod
     personality = None
@@ -57,12 +59,16 @@ class LearningControl:
         # Output state
         print "Y"
         print "Acceleration : ", accel
-        print "Speed : ", state.dydt
-        print "Position : ", state.y
+        print "Speed        : ", state.dydt
+        print "Position     : ", state.y
 
         print "X"
-        print "Speed : ", state.dxdt
-        print "Position : ", state.x
+        print "Speed        : ", state.dxdt
+        print "Position     : ", state.x
+
+        print "Angle"
+        print "Speed        : ", state.dangdt
+        print "Position     : ", state.ang
 
         # Add my variables to state
         state.d2ydt2 = accel
@@ -110,25 +116,29 @@ class LearningControl:
                 # Make a VerticalMovePersonality the active personality
                 self.personality = VerticalMovePersonality(self.hoverThrust, state, centerHeight)
                 # Queue up two more personalities to test movement to and fro
-                backToStartMove = VerticalMovePersonality(self.hoverThrust, state, bottomPosition - (passageHeight / 4))
-                backToCenterMove = VerticalMovePersonality(self.hoverThrust, state, centerHeight)
-                self.personalities.appendleft(backToStartMove)
-                self.personalities.appendleft(backToCenterMove)
+                #backToStartMove = VerticalMovePersonality(self.hoverThrust, state, bottomPosition - (passageHeight / 4))
+                #backToCenterMove = VerticalMovePersonality(self.hoverThrust, state, centerHeight - (passageHeight / 4))
+                #self.personalities.appendleft(backToStartMove)
+                #self.personalities.appendleft(backToCenterMove)
                 # Run the first cycle
                 self.personality.process(state)
                 # We have started to center.
                 self.positionCenterStarted = True
             elif self.startTurningTest == False:
-                self.personality = HorizontalMoveLearnerPersonality(self.hoverThrust, 0.5)
-                self.personality.process(state)
+                for t in range(0, 10, 1):
+                    for u in range(0, 10, 1):
+                        self.personalities.appendleft(HorizontalMoveLearnerPersonality(self.hoverThrust, t / 10.0, u))
                 self.startTurningTest = True
+            elif self.horizontalMoveStarted == False:
+                self.personality = HorizontalMovePersonality(self.hoverThrust, state, 200)
+                self.personality.process(state)
+                self.horizontalMoveStarted = True
 
-        print "Thrust : ", control.up
-        
         self.lastDyDt = state.dydt
         self.lastAccel = accel
         
         if (self.personality != None):
+            print "Thrusters"
             print "Up : ", self.personality.control.up
             print "Left : ", self.personality.control.left
             print "Right : ", self.personality.control.right
