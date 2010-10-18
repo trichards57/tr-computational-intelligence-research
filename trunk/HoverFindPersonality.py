@@ -1,22 +1,8 @@
-from simulation import *
+from math import fabs
 
-class HoverFindPersonality:
-    # Setting this to a larger number makes the system more tolerant of residual
-    # velocities.
-    # If too high, the pod will drift when it is supposed to be hovering.
-    # The larger the number, the faster it will drift.
-    # If too small, cancelAcceleration and cancelVelocity will take longer.
-    zeroThreshold = 1e-4
-    # Stores the value of thrust required to cancel out the acceleration due to gravity
-    hoverThrust = 0.2
-    # The step used during cancelAcceleration to modify cancelThrust.
-    thrustStep = 0.5
-    # The Control object that needs to be changed
-    control = Control()
+from Personality import Personality
 
-    # Has the Personality achieved it's goal (in this case, found a suitable hover thrust)?
-    done = False
-
+class HoverFindPersonality(Personality):
     def process(self, state):
         print "Finding Hover"
         if fabs(state.d2ydt2) < self.zeroThreshold:

@@ -1,10 +1,15 @@
+from math import fabs
+from pydoc import deque
+
+from HorizontalMoveLearnerPersonality import HorizontalMoveLearnerPersonality
 from HorizontalMovePersonality import HorizontalMovePersonality
-from simulation import *
-from HoverFindPersonality import *
-from StopPersonality import *
-from VerticalMovePersonality import *
-from HorizontalMoveLearnerPersonality import *
-from collections import deque
+from HoverFindPersonality import HoverFindPersonality
+from StopPersonality import StopPersonality
+from VerticalMovePersonality import VerticalMovePersonality
+from simulation import Control
+from simulation import GravityPod
+from simulation import Simulation
+from simulation import World
 
 # Setting this to a larger number makes the system more tolerant of residual
 # velocities.
@@ -25,7 +30,8 @@ class LearningControl:
     ## Last State Variables
     # Last acceleration. Used for cancelAcceleration to determine if thrust steps are too large.
     lastAccel = 1
-    # Last vertical speed. Used to calculate acceleration. Must be initialized to >= zeroThreshold, otherwise acceleration appears to be 0 during the first cycle.
+    # Last vertical speed. Used to calculate acceleration. Must be initialized to >= zeroThreshold,
+    # otherwise acceleration appears to be 0 during the first cycle, mucking up the hover thrust finding.
     lastDyDt = zeroThreshold * 10
 
     ## Current State Variables

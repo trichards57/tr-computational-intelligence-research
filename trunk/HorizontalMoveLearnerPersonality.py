@@ -1,71 +1,98 @@
-from simulation import *
-from collections import deque
+from Personality    import Personality
+## @package HorizontalMoveLearnerPersonality
+# This module contains the personality that handles the horizontal move learning.
+# It concentrates on testing horizontal movement to collect data that allows the
+# acceleration performance to be approximated with a neural network.
+#
+# If the neural network does not perform a good enough job, this will be removed
+# and the acceleration will be calculated mathematically.
+#
+# @note The data produced from this is easily calculated using the formula.
+# @todo Modify the experiment to allow the pod to rotate for longer
 
-class HorizontalMoveLearnerPersonality:
-    # Setting this to a larger number makes the system more tolerant of residual
-    # velocities.
-    # If too high, the pod will drift when it is supposed to be hovering.
-    # The larger the number, the faster it will drift.
-    # If too small, cancelAcceleration and cancelVelocity will take longer.
-    zeroThreshold = 1e-4
-    # Stores the value of thrust required to cancel out the acceleration due to gravity
-    hoverThrust = 0
-    # The step used during cancelAcceleration to modify cancelThrust.
-    thrustStep = 0.5
-    # The Control object that needs to be changed
-    control = Control()
+from math import cos
+from math import pi
 
-    # Has the Personality achieved it's goal (in this case, moved the pod to the required y position)?
-    done = False
+from Personality import Personality
 
-    turning = False
-    turnDone = False
-    stopping = False
-    stoppingDone = False
-    slowing = False
-    slowed = False
-    stopping2 = False
-    stoppingDone2 = False
-    waiting = False
-    accelWait = 0
-    decelWait = 0
+## The personality responsible for producing training data related to horizontal movement.
+#
+# This personality will produce a CSV that contains the training data required 
+# to train the neural network used to control horizontal acceleration.  The file
+# produced is of the format:
+#
+# @code
+# Turning Thrust, Acceleration Time, Time Step, Starting Velocity, Ending Velocity
+# @endcode
+#
+# It is then saved in to the file learningData.csv. If the file already exists,
+# the new data will be appended to it.
+class HorizontalMoveLearnerPersonality(Personality):
+    ## Class initialiser. Initialises all the member variables to their starting
+    # states.
+    def __init__(self, hoverThrust, rotateThrust, accelTime):
+        Personality.__init__(hoverThrust)
+        # State Machine Variables
+        ## @stateMachineVar begun the turn that starts the pod accelerating.
+        self.turning = False
+        ## @stateMachineVar ended the turn that starts the pod accelerating.
+        self.turnDone = False
+        ## @stateMachineVar begun the turn that stops the pod accelerating.
+        self.stopping = False
+        ## @stateMachineVar ended the turn that stops the pod accelerating.
+        self.stoppingDone = False
+        ## @stateMachineVar begun the turn that starts the pod decelerating.
+        self.slowing = False
+        ## @stateMachineVar ended the turn that starts the pod deceleraring.
+        self.slowed = False
+        ## @stateMachineVar begun the turn that stops the pod decelerating.
+        self.stopping2 = False
+        ## @stateMachineVar ended the turn that stops the pod decelerating.
+        self.stoppingDone2 = False
+        ## @stateMachineVar taken the speed reading.
+        self.waiting = False
 
-    rotateThrust = 0.0
-    rotateTime = 0
-
-    file = None
-
-    def __init__(self, hoverThrust, rotateThrust, rotateTime):
-        self.hoverThrust = hoverThrust
+        ## The thrust used to rotate the pod.
         self.rotateThrust = rotateThrust
-        self.rotateTime = rotateTime
-        #self.file.write(',Start accelerating,,Stop accelerating,,Start decelerating,,Stop decelerating\n')
-        #self.file.write('Turn thrust,Time step,Start Turn 1 Velocity, Stop Turn 1 Velocity, Start Turn 2 Velocity, Stop Turn 2 Velocity, Wait, Start Turn 3 Velocity, Stop Turn 3 Velocity, Start Turn 4 Velocity, Stop Turn 4 Velocity, Final\n')
+        ## The time the pod should accelerate for.
+        self.accelTime = accelTime
 
+        ## How long the pod has been accelerating for.
+        self.accelWait = 0
+        ## How long the pod has been decelerating for.
+        self.decelWait = 0
+
+        ## File variable used to write turn data to.
+        self.file = None
+
+    ## Changes the pods rate of turn by firing the left thruster.
     def accelerateRotateLeft(self, thrust):
         self.control.left = thrust
         self.control.right = 0
 
+    ## Changes the pods rate of turn by firing the right thruster.
     def accelerateRotateRight(self, thrust):
         self.control.left = 0
         self.control.right = thrust
 
+    ## Zeros both thrusters.
     def constantRotate(self):
         self.control.left = 0
         self.control.right = 0
 
+    ## Runs the personality processing.
     def process(self, state):
         if self.turning == False:
             # Start turn to accelerate
             self.file = open('learningData.csv', 'a')
             self.accelerateRotateRight(self.rotateThrust)
             self.turning = True
-            self.file.write(str(self.rotateThrust) + ',' + str(self.rotateTime) + ',' + str(state.dt) + ',' + str(state.dxdt) + ',')
+            self.file.write(str(self.rotateThrust) + ',' + str(self.accelTime) + ',' + str(state.dt) + ',' + str(state.dxdt) + ',')
         elif self.turnDone == False:
             # Stop turn to accelerate
             self.accelerateRotateLeft(self.rotateThrust)
             self.turnDone = True
-        elif self.accelWait < self.rotateTime:
+        elif self.accelWait < self.accelTime:
             # Allow the pod to accelerate
             self.constantRotate()
             self.accelWait += 1
@@ -90,7 +117,7 @@ class HorizontalMoveLearnerPersonality:
             # Stop turn to decelerate
             self.accelerateRotateRight(self.rotateThrust)
             self.slowed = True
-        elif self.decelWait < self.rotateTime:
+        elif self.decelWait < self.accelTime:
             # Allow the pod to decelerate
             self.constantRotate()
             self.decelWait += 1
