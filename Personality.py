@@ -1,20 +1,24 @@
-from simulation import *
+from simulation import Control
 
-# Base class for all Personalities
-
+## Base class for all Personalities.
+#
+# This class initialises the zeroThreshold, hoverThrust and control variables
+# that are used by every personality.
 class Personality:
-    # Setting this to a larger number makes the system more tolerant of residual
-    # velocities.
-    # If too high, the pod will drift when it is supposed to be hovering.
-    # The larger the number, the faster it will drift.
-    # If too small, cancelAcceleration and cancelVelocity will take longer.
+    ## The value that is considered small enough to be assumed zero.
+    #
+    # Settings this value to a larger number makes the system more tolerant of
+    # residual velocities.
+    #
+    # If this value is too high, the pod will drift while it tries to hover.
+    # If the value is too small, the pod will take longer to stop.
     zeroThreshold = 1e-4
-    # Stores the value of thrust required to cancel out the acceleration due to gravity
-    hoverThrust = 0
-    # The step used during cancelAcceleration to modify cancelThrust.
-    thrustStep = 0.5
-    # The Control object that needs to be changed
-    control = Control()
+    
+    def __init__(self, hoverThrust):
+        ## The downwards thrust required to maintain the pod at zero vertical acceleration.
+        self.hoverThrust = hoverThrust
+        ## The Control object that describes the thrust values desired.
+        self.control = Control()
 
-    # Has the Personality achieved it's goal (in this case, moved the pod to the required y position)?
-    done = False
+        ## Indicates if the personality has achieved its goal.
+        self.done = False

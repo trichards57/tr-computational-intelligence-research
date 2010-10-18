@@ -1,6 +1,9 @@
+from math import cos
+from math import pi
+from math import fabs
 import pickle
-from Personality import *
-from simulation import *
+
+from Personality import Personality
 
 class HorizontalMovePersonality(Personality):
     # The desired end position of the pod

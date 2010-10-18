@@ -1,6 +1,7 @@
-from Personality import *
-from simulation import *
-from StopPersonality import *
+from math import fabs
+
+from Personality import Personality
+from StopPersonality import StopPersonality
 
 class VerticalMovePersonality(Personality):
     # The desired end position of the pod
