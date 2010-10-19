@@ -4,34 +4,28 @@ from Personality import Personality
 from StopPersonality import StopPersonality
 
 class VerticalMovePersonality(Personality):
-    # The desired end position of the pod
-    destinationY = 0
-    # The starting position of the pod
-    originY = 0
-    # The total distance to cover
-    totalDistance = 0
-
-    # The thrust used to move the pod
-    maneuverThrust = 0
-    # The maximum speed the pod will move at
-    maximumSpeed = 10
-
+    
     # Enumeration for flight profiles
     continuousSpeedFlight = 1 # Fly at a set speed
     continuousAccelFlight = 2 # Fly with constant acceleration
     stopFlight = -1
 
-    # Determines which flight profile to use
-    flightProfile = continuousSpeedFlight
-
-    stopper = None
-
     def __init__(self, hoverThrust, state, destinationY):
+        Personality.__init__(self, hoverThrust)
+        # The total distance to cover
+        self.totalDistance = 0
         self.hoverThrust = hoverThrust
         self.destinationY = destinationY
         self.originY = state.y
         self.stopper = StopPersonality(hoverThrust)
         self.stopper.control = self.control
+
+        # The thrust used to move the pod
+        self.maneuverThrust = 0
+        # The maximum speed the pod will move at
+        self.maximumSpeed = 10
+        # Determines which flight profile to use
+        self.flightProfile = self.continuousSpeedFlight
 
         # Get the largest possible moving force that
         # can be canceled in an equal amount of time
@@ -41,6 +35,8 @@ class VerticalMovePersonality(Personality):
         # otherwise the speeding and slowing thrusts will
         # unbalanced
         self.maneuverThrust = hoverThrust
+
+
 
         # The sum of the moving force and the hover thrust
         # cannot be greater than 1, otherwise the thruster

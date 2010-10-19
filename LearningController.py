@@ -17,42 +17,8 @@ from simulation import World
 # The larger the number, the faster it will drift.
 # If too small, cancelAcceleration and cancelVelocity will take longer.
 zeroThreshold = 1e-4
-# Setting this to a larger number makes the position finding system less
-# accurate but faster.
-# Setting this to a smaller number makes the position finding system less
-# accurate but slower.
-# If the number is too small, larger movements will cause instability.
-# About 5 seems to be the best compromise if large movements are needed.
-positionThreshold = 5
 
 class LearningControl:
-
-    ## Last State Variables
-    # Last acceleration. Used for cancelAcceleration to determine if thrust steps are too large.
-    lastAccel = 1
-    # Last vertical speed. Used to calculate acceleration. Must be initialized to >= zeroThreshold,
-    # otherwise acceleration appears to be 0 during the first cycle, mucking up the hover thrust finding.
-    lastDyDt = zeroThreshold * 10
-
-    ## Current State Variables
-    # Stores the value of thrust required to cancel out the acceleration due to gravity
-    hoverThrust = 0
-    # Used during the initialisation to flag if the hover thrust search has started.
-    hoverThrustSearching = False
-    # Used during initialisation to flag if the hover thrust has been found.
-    hoverThrustFound = False
-    # Used during initialisation to flag if the pod has come to a halt before the first maneuver.
-    velocityZeroed = False
-    # Used during initialisation to flag if the pod has been position equidistant from the top and bottom walls sensed.
-    positionCenterStarted = False
-    # Used for the state machine to make sure it doesn't try to restart the turning.
-    startTurningTest = True
-    horizontalMoveStarted = True
-
-    # Current personality that is running the pod
-    personality = None
-    # List of personalities to be used
-    personalities = deque()
 
     # Navigator Variables
     # Numbers chosen so that -up is down and -left = right
@@ -60,7 +26,36 @@ class LearningControl:
     down = -1
     left = 2
     right = -2
-    direction = 0
+
+    def __init__(self):
+        # Last State Variables
+        # Last acceleration. Used for cancelAcceleration to determine if thrust steps are too large.
+        self.lastAccel = 1
+        # Last vertical speed. Used to calculate acceleration. Must be initialized to >= zeroThreshold,
+        # otherwise acceleration appears to be 0 during the first cycle, mucking up the hover thrust finding.
+        self.lastDyDt = zeroThreshold * 10
+
+        # Current State Variables
+        # Stores the value of thrust required to cancel out the acceleration due to gravity
+        self.hoverThrust = 0
+        # Used during the initialisation to flag if the hover thrust search has started.
+        self.hoverThrustSearching = False
+        # Used during initialisation to flag if the hover thrust has been found.
+        self.hoverThrustFound = False
+        # Used during initialisation to flag if the pod has come to a halt before the first maneuver.
+        self.velocityZeroed = False
+        # Used during initialisation to flag if the pod has been position equidistant from the top and bottom walls sensed.
+        self.positionCenterStarted = False
+        # Used for the state machine to make sure it doesn't try to restart the turning.
+        self.startTurningTest = True
+        self.horizontalMoveStarted = True
+
+        # Current personality that is running the pod
+        self.personality = None
+        # List of personalities to be used
+        self.personalities = deque()
+
+        self.direction = 0
 
     def process(self,sensor,state,dt):
 
@@ -103,7 +98,7 @@ class LearningControl:
                 self.personality.process(state)
             elif self.hoverThrustSearching == False:
                 # We've just started. Make a HoverFindPersonality the active personality
-                self.personality = HoverFindPersonality()
+                self.personality = HoverFindPersonality(0.2)
                 # Run the first cycle.
                 self.personality.process(state)
                 # We are now searching for the hover thrust.

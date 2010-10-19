@@ -1,0 +1,13 @@
+Find the closest sensor reading.
+Look at sensor either side, work out equation of line.
+Follow sensors around until a discontinuity is found.
+Discontinuity is the end of the line.
+
+If the discontinuity is too close, the wall is bending towards us.
+Move to a position directly below the point and use that as the next
+wall.
+If the discontinuity is too far, the wall is bending away. Move to a point
+along the line of the wall, just past the end.
+
+Continue along the line at the end of the one just looked at.
+

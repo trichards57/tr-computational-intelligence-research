@@ -1,3 +1,13 @@
+import Personality
+## @module HorizontalMovePersonality
+# This module contains the personality that handles horizontal movement.
+# It concentrates on moving the pod to a specific coordinate on the x-axis,
+# using the neural network trained from the HorizontalMoveLearnerPersonality
+# data.
+#
+# If the neural network does not perform a good enough job, this will be removed
+# and the acceleration will be calculated mathematically.
+
 from math import cos
 from math import pi
 from math import fabs
@@ -5,66 +15,102 @@ import pickle
 
 from Personality import Personality
 
+## The personality responsible for moving the pod horizontally.
+#
+# This personality takes a given x-coordinate and positions the pod
+# there by manipulating the pod angle and thrust. The vertical component
+# of the thrust must always be the hover thrust, so the acceleration is
+# controlled only by the angle the pod is currently pointing at.
+#
+# The flight profile the pod travels with can be changed. At present, only
+# a constant speed profile is available. A constant acceleration profile
+# (which should be faster but potentially less accurate) can also be used,
+# but is not currently implemented.
+#
+# The personality leaves the pod at the same y-coordinate it started at,
+# pointed directly up, with accelerations at or very near zero.
+#
+# @todo Implement constant acceleration flight profile.
 class HorizontalMovePersonality(Personality):
-    # The desired end position of the pod
-    destinationX = 0
-    # The starting position of the pod
-    originX = 0
-    # The total distance to cover
-    totalDistance = 0
-
-    # Neural net used to work out thrusts for acceleration.
-    controlNet = pickle.load(open('Neural.net', 'r'))
-
-    maximumSpeed = 10
-    turnThrust = 0
-    direction = 0
-    
-    # Enumeration for flight profiles
-    continuousSpeedFlight = 1 # Fly at a set speed
-    continuousAccelFlight = 2 # Fly with constant acceleration
+    ## Represents a continuous speed flight profile.
+    continuousSpeedFlight = 1
+    ## Represents a continuous acceleration flight profile.
+    continuousAccelFlight = 2
+    ## Represents a flight profile that brings the pod to a halt.
     stopFlight = -1
-
-    # State machine variables
-    startedAccelerating = False
-    nowAccelerating = False
-    doneAccelerating = False
-    finishedAccelerating = False
-    finishedMove = False
-    startedDecelerating = False
-    nowDecelerating = False
-    doneDecelerating = False
-    finishedDecelerating = False
-
-    waiting = 0
+    ## How long the pod should accelerate for.
     delay = 50
 
-    # Determines which flight profile to use
-    flightProfile = continuousSpeedFlight
-
+    ## Class initialiser. Initialises all the member variables to their starting
+    # states.
     def __init__(self, hoverThrust, state, destinationX):
-        self.hoverThrust = hoverThrust
+        Personality.__init__(self, hoverThrust)
+
+        # State machine variables
+        ## @stateMachineVar begun the turn that starts the pod accelerating.
+        self.startedAccelerating = False
+        ## @stateMachineVar finished the turn that starts the pod accelerating.
+        self.nowAccelerating = False
+        ## @stateMachineVar begun the turn that stops the pod accelerating.
+        self.doneAccelerating = False
+        ## @stateMachineVar finished the turn that stops the pod accelerating.
+        self.finishedAccelerating = False
+        ## @stateMachineVar arrived at the destination y coordinate.
+        self.finishedMove = False
+        ## @stateMachineVar begun the turn that starts the pod decelerating.
+        self.startedDecelerating = False
+        ## @stateMachineVar finished the turn that starts the pod decelerating.
+        self.nowDecelerating = False
+        ## @stateMachineVar begun the turn that stops the pod decelerating
+        self.doneDecelerating = False
+        ## @stateMachineVar finished the turn that stops the pod decelerating
+        self.finishedDecelerating = False
+
+        ## The desired x coordinate of the pod.
         self.destinationX = destinationX
+        ## The starting x coordinate of the pod.
         self.originX = state.x
+        ## The total distance the pod has to cover.
+        self.totalDistance = 0
 
-        # Get a turn thrust that will accelerate us at about 0.4px/s^2 with a 0 cycle delay
+        ## The neural net used to work out the thrust required for a specific
+        # accelerating in a specific time. Loaded from a file, currently
+        # produced by the pybrainTest module.
+        self.controlNet = pickle.load(open('Neural.net', 'r'))
+
+        ## The maximum speed used in the constant speed profile.
+        self.maximumSpeed = 10
+        ## The thrust used to turn the pod, as determined by the neural net.
         self.turnThrust = self.controlNet.activate([0,0.8])[0]
+        ## The direction the pod will need to head in.
+        self.direction = 0
 
+        ## Used by the state machine to time how long it has been
+        # accelerating or decelerating.
+        self.waiting = 0
+
+        ## Determines the flight profile to use.
+        self.flightProfile = self.continuousSpeedFlight
+
+    ## Changes the pods rate of turn by firing the left thruster.
     def accelerateRotateLeft(self, thrust):
         self.control.left = thrust
         self.control.right = 0
         print "L"
 
+    ## Changes the pods rate of turn by firing the right thruster.
     def accelerateRotateRight(self, thrust):
         self.control.left = 0
         self.control.right = thrust
         print "R"
 
+    ## Zeros both thrusters.
     def constantRotate(self):
         self.control.left = 0
         self.control.right = 0
         print "C"
 
+    ## Fire the thrusters so the craft starts to accelerate or stops decelerating.
     def startMove(self):
         print self.direction
         if self.direction == 1:
@@ -73,6 +119,7 @@ class HorizontalMovePersonality(Personality):
         else:
             self.accelerateRotateLeft(self.turnThrust)
 
+    ## Fire the thrusters so the craft stops accerating or starts to decelerate
     def stopMove(self):
         print self.direction
         if self.direction == 1:
@@ -81,7 +128,7 @@ class HorizontalMovePersonality(Personality):
         else:
             self.accelerateRotateRight(self.turnThrust)
 
-
+    ## Runs the personality processing.
     def process(self, state):
         print "Horizontal Move"
         # How far have we got left to go?
@@ -95,7 +142,7 @@ class HorizontalMovePersonality(Personality):
             self.direction = -1
 
         if self.flightProfile == self.stopFlight:
-            self.Done = True
+            self.done = True
             self.control.up = self.hoverThrust
         elif self.flightProfile == self.continuousSpeedFlight:
             if self.startedAccelerating == False:

@@ -1,8 +1,14 @@
+import Personality
 from math import fabs
 
 from Personality import Personality
 
 class HoverFindPersonality(Personality):
+
+    def __init__(self, hoverThrust):
+        Personality.__init__(self, hoverThrust)
+        self.thrustStep = 0
+
     def process(self, state):
         print "Finding Hover"
         if fabs(state.d2ydt2) < self.zeroThreshold:
