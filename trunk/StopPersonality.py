@@ -1,3 +1,4 @@
+import Personality
 from math import fabs
 
 from Personality import Personality
@@ -5,7 +6,8 @@ from Personality import Personality
 class StopPersonality(Personality):
 
     def __init__(self, hoverThrust):
-        self.hoverThrust = hoverThrust
+        Personality.__init__(self, hoverThrust)
+        self.thrustStep = 0.5
 
     def process(self, state):
         print "Stopping"

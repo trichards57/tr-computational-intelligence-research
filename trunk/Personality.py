@@ -13,7 +13,9 @@ class Personality:
     # If this value is too high, the pod will drift while it tries to hover.
     # If the value is too small, the pod will take longer to stop.
     zeroThreshold = 1e-4
-    
+
+    ## Class initialiser. Initialises all the member variables to their starting
+    # states.
     def __init__(self, hoverThrust):
         ## The downwards thrust required to maintain the pod at zero vertical acceleration.
         self.hoverThrust = hoverThrust

@@ -1,4 +1,3 @@
-from Personality    import Personality
 ## @package HorizontalMoveLearnerPersonality
 # This module contains the personality that handles the horizontal move learning.
 # It concentrates on testing horizontal movement to collect data that allows the
@@ -9,6 +8,8 @@ from Personality    import Personality
 #
 # @note The data produced from this is easily calculated using the formula.
 # @todo Modify the experiment to allow the pod to rotate for longer
+
+from Personality import Personality
 
 from math import cos
 from math import pi
@@ -31,7 +32,7 @@ class HorizontalMoveLearnerPersonality(Personality):
     ## Class initialiser. Initialises all the member variables to their starting
     # states.
     def __init__(self, hoverThrust, rotateThrust, accelTime):
-        Personality.__init__(hoverThrust)
+        Personality.__init__(self, hoverThrust)
         # State Machine Variables
         ## @stateMachineVar begun the turn that starts the pod accelerating.
         self.turning = False
