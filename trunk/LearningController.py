@@ -1,4 +1,7 @@
 from math import fabs
+from math import pi
+from math import sin
+from math import cos
 from pydoc import deque
 
 from HorizontalMoveLearnerPersonality import HorizontalMoveLearnerPersonality
@@ -20,12 +23,16 @@ zeroThreshold = 1e-4
 
 class LearningControl:
 
-    # Navigator Variables
+    # Direction Constants
     # Numbers chosen so that -up is down and -left = right
     up = 1
     down = -1
     left = 2
     right = -2
+
+    # Navigator Types
+    furthestNewDistance = 1
+    wallFollowing = 2
 
     def __init__(self):
         # Last State Variables
@@ -55,7 +62,11 @@ class LearningControl:
         # List of personalities to be used
         self.personalities = deque()
 
+        self.navigationTechnique = self.furthestNewDistance
+
         self.direction = 0
+
+        self.sensorDataFile = open('sensorData.csv', 'w')
 
     def process(self,sensor,state,dt):
 
@@ -142,7 +153,7 @@ class LearningControl:
                 self.personality = HorizontalMovePersonality(self.hoverThrust, state, 200)
                 self.personality.process(state)
                 self.horizontalMoveStarted = True
-            else:
+            elif self.navigationTechnique == self.furthestNewDistance:
                 # We're done learning. Time to navigate.
                 # Find the furthest direction that we haven't just traveled in.
 
@@ -199,11 +210,64 @@ class LearningControl:
                     self.personality.process(state)
 
                 self.direction = newDirection
+            elif self.navigationTechnique == self.wallFollowing:
+                self.personality = None
+                # Alternativly, navigate by following the wall.
 
+                # First, find the sensor reporting the closest object.
+                closestReading = 5000
+                closestSensor = -1
+                for i in range(0,40):
+                    if closestReading > sensor[i].val:
+                        closestReading = sensor[i].val
+                        closestSensor = i
+
+                print "Closest wall is on sensor : ", closestSensor
+
+                nextSensor = closestSensor + 1
+                if nextSensor >= 40:
+                    nextSensor -= 40
+
+                x1 = state.x + sensor[closestSensor].val * sin(sensor[closestSensor].ang)
+                y1 = state.y + sensor[closestSensor].val * cos(sensor[closestSensor].ang)
+
+                x2 = state.x + sensor[nextSensor].val * sin(sensor[nextSensor].ang)
+                y2 = state.y + sensor[nextSensor].val * cos(sensor[nextSensor].ang)
+
+                print "Point 1 : (", x1, ",", y1, ")"
+                print "Point 2 : (", x2, ",", y2, ")"
+
+                lineM = 0
+                lineC = 0
+
+                if x1 == x2:
+                    # Vertical line. If a discontinuity is detected, but not on
+                    # sensor 0 or 20 (which are pointing parallel to the line),
+                    # move up to it. If no discontinuity is detected, creep along
+                    # the line until one is found.
+                    print "Vertical Wall"
+                elif y1 == y2:
+                    # Horizontal line. If a discontinuity is detected, but not on
+                    # sensor 10 or 30 (which are pointing parallel to the line),
+                    # move up to it. If no discontinuity is detected, creep along
+                    # the line until one is found.
+                    print "Horizontal Wall"
+                else:
+                    # Arbitary diagonal wall. If a discontinuity is detected on
+                    # a sensor that should be able to detect the wall, move up to
+                    # it. If no discontinuity is detected, creep along the line
+                    # until one is found.
+                    print "Diagonal Wall"
 
         self.lastDyDt = state.dydt
         self.lastAccel = accel
-        
+
+        # Store sensor data:
+        sensorData = str(state.x) + ',' + str(state.y) + ','
+        for i in range(0,40):
+            sensorData += str(sensor[i].ang) + ',' + str(sensor[i].val) + ',' + sensor[i].wall + ','
+        self.sensorDataFile.write(sensorData + '\n')
+
         if (self.personality != None):
             print "Thrusters"
             print "Up : ", self.personality.control.up
