@@ -1,7 +1,7 @@
 ﻿<Window x:Class="MultiAgentLab.Window1"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="Window1" Height="300" Width="300" Loaded="WindowLoaded">
+    Title="Window1" Height="300" Width="300">
     <DockPanel DataContext="{Binding}">
         <TextBlock DockPanel.Dock="Top">Multi-Agent Path Finder</TextBlock>
         <StackPanel DockPanel.Dock="Left">
@@ -15,12 +15,32 @@
                         <TextBox Name="MapHeightTextBlock" Text="100" />
                     </StackPanel>
                     <Button Name="LoadMapButton"  Click="LoadMapClick">Load Map Data</Button>
-                    <Button Name="ResetMapButton" IsEnabled="False">Reset Map</Button>
+                    <Button Name="ResetMapButton" Click="ResetMapClick"  IsEnabled="False">Reset Map</Button>
+                </StackPanel>
+            </Expander>
+            <Expander Header="Agents">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Agent Count</TextBlock>
+                        <TextBox Name="AgentCountTextBox" Text="1" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Update Rate</TextBlock>
+                        <TextBox Name="UpdateRateTextBox" Text="500" />
+                        <TextBlock>ms</TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
+            <Expander Header="Simulation">
+                <StackPanel>
+                    <Button Click="StartButtonClick">Start</Button>
                 </StackPanel>
             </Expander>
         </StackPanel>
-        <Canvas Name="MapCanvas">
-            
-        </Canvas>
+        <Viewbox Stretch="Fill" StretchDirection="Both">
+            <Canvas Name="MapCanvas">
+                
+            </Canvas>
+        </Viewbox>
     </DockPanel>
 </Window>
