@@ -4,8 +4,21 @@
     Title="Window1" Height="300" Width="300" Loaded="WindowLoaded">
     <DockPanel DataContext="{Binding}">
         <TextBlock DockPanel.Dock="Top">Multi-Agent Path Finder</TextBlock>
-        
+        <StackPanel DockPanel.Dock="Left">
+            <Expander Header="Map">
+                <StackPanel>
+                    <TextBlock>Map Size</TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Width</TextBlock>
+                        <TextBox Name="MapWidthTextBlock" Text="100" />
+                        <TextBlock>Height</TextBlock>
+                        <TextBox Name="MapHeightTextBlock" Text="100" />
+                    </StackPanel>
+                    <Button Name="LoadMapButton"  Click="LoadMapClick">Load Map Data</Button>
+                    <Button Name="ResetMapButton" IsEnabled="False">Reset Map</Button>
+                </StackPanel>
+            </Expander>
+        </StackPanel>
         <Image Source="{Binding}" />
     </DockPanel>
 </Window>
- 
