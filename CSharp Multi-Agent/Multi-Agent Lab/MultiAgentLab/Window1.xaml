@@ -19,6 +19,8 @@
                 </StackPanel>
             </Expander>
         </StackPanel>
-        <Image Source="{Binding}" />
+        <Canvas Name="MapCanvas">
+            
+        </Canvas>
     </DockPanel>
 </Window>
