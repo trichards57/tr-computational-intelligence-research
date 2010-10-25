@@ -37,18 +37,18 @@ namespace MultiAgentLab.Classes
             }
         }
 
-        public Brush SquareColor
+        public System.Drawing.Color SquareColor
         {
             get
             {
                 if (!passable)
-                    return Brushes.Red;
+                    return System.Drawing.Color.Red;
                 else if (destination)
-                    return Brushes.White;
+                    return System.Drawing.Color.White;
                 else
                 {
                     var level = (byte)(Math.Round((255.0 / 10.0) * pheromoneLevel));
-                    return new SolidColorBrush(Color.FromRgb(0, level, 0));
+                    return System.Drawing.Color.FromArgb(0, level, 0);
                 }
             }
         }
