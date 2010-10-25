@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FieldViewer", "FieldViewer\FieldViewer.csproj", "{95A804BA-3716-48D5-92DC-BA00F3931FC5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiAgentLab", "MultiAgentLab\MultiAgentLab.csproj", "{8865E5AC-7E63-4E62-BADD-76AF94B054F2}"

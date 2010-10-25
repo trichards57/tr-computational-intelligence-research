@@ -1,33 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using MultiAgentLab.Classes;
 using System.Threading;
-using Microsoft.Win32;
-using System.Windows.Threading;
+using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using Microsoft.Win32;
+using MultiAgentLab.Classes;
 
 namespace MultiAgentLab
 {
+    using System.Drawing;
+    using System.Drawing.Imaging;
+    using System.Runtime.InteropServices;
+    using System.Windows.Controls;
+    using System.Windows.Media;
+    using System.Windows.Shapes;
+
+    using Rectangle = System.Drawing.Rectangle;
+    using Size = System.Windows.Size;
+
     /// <summary>
     /// Interaction logic for Window1.xaml
     /// </summary>
-    public partial class Window1 : Window
+    public partial class Window1
     {
         List<Agent> agentsList = new List<Agent>();
         Timer agentTicker;
         Timer newAgentTicker;
-        int count = 0;
+        int count;
         Field field;
 
         public Window1()
@@ -37,21 +40,26 @@ namespace MultiAgentLab
 
         private void TimerTick(object state)
         {
-            var field = state as Field;
+            var fild = state as Field;
+
+            if (fild == null)
+                throw new ArgumentException("state must be a Field", "state");
+
             lock (agentsList)
             {
                 foreach (var agent in agentsList)
-                    agent.Process(field);
+                    agent.Process(fild);
             }
 
-            foreach (var row in field)
-                foreach (var square in row)
-                    if (square.PheremoneLevel > 1)
-                        square.PheremoneLevel -= 0.00001;
+            foreach (var square in fild.SelectMany(row => row.Where(square => square.PheremoneLevel > 1)))
+            {
+                square.PheremoneLevel -= 0.00001;
+            }
+
             count++;
             if (count > 10000)
             {
-                agentsList.Add(new Agent(field.StartPoint));
+                agentsList.Add(new Agent(fild.StartPoint));
                 count = 0;
             }
         }
@@ -62,17 +70,19 @@ namespace MultiAgentLab
 
         private void LoadMapClick(object sender, RoutedEventArgs e)
         {
-            var fileDialog = new OpenFileDialog();
-            fileDialog.AddExtension = false;
-            fileDialog.CheckFileExists = true;
-            fileDialog.CheckPathExists = true;
-            fileDialog.DefaultExt = "csv";
-            fileDialog.DereferenceLinks = true;
-            fileDialog.Filter = "Comma Seperated Variables (*.csv)|*.csv|All Files (*.*)|*.*";
-            fileDialog.Multiselect = false;
-            fileDialog.ShowReadOnly = false;
-            fileDialog.Title = "Load Sensor Data";
-            fileDialog.ValidateNames = true;
+            var fileDialog = new OpenFileDialog
+            {
+                AddExtension = false,
+                CheckFileExists = true,
+                CheckPathExists = true,
+                DefaultExt = "csv",
+                DereferenceLinks = true,
+                Filter = "Comma Seperated Variables (*.csv)|*.csv|All Files (*.*)|*.*",
+                Multiselect = false,
+                ShowReadOnly = false,
+                Title = "Load Sensor Data",
+                ValidateNames = true
+            };
 
             var result = fileDialog.ShowDialog(this);
 
@@ -83,6 +93,7 @@ namespace MultiAgentLab
 
                 Cursor = Cursors.Wait;
                 LoadMapButton.IsEnabled = false;
+                ResetMapButton.IsEnabled = false;
                 MapWidthTextBlock.IsEnabled = false;
                 MapHeightTextBlock.IsEnabled = false;
 
@@ -109,38 +120,88 @@ namespace MultiAgentLab
         private void LoadMap(object fileName)
         {
             var data = (LoadMapData)fileName;
-           
+
             field = new Field((int)data.MapSize.Width, (int)data.MapSize.Height, data.FileName);
 
-            DrawMap();
+            Dispatcher.Invoke(DispatcherPriority.Normal, new Action(DrawMap));
 
             Dispatcher.Invoke(DispatcherPriority.Normal, new Action(LoadMapComplete));
         }
 
+        private Bitmap map;
+
         private void DrawMap()
         {
-            var picture = new System.Drawing.Bitmap(field.Count * 10, field.First().Count * 10);
-            var graphics = System.Drawing.Graphics.FromImage(picture);
+            var picture = new Bitmap(field.Count * 10, field.First().Count * 10);
+            var graphics = Graphics.FromImage(picture);
 
             lock (field)
             {
-                for (var y = 0; y < field.Count; y++)
+                var rects = field.AsParallel().SelectMany((row, y) => row.Select((square, x) => new
                 {
-                    for (var x = 0; x < field[y].Count; x++)
-                    {
-                        var rect = new System.Drawing.Rectangle(x * 10, y * 10, 10, 10);
-                        var color = field[y][x].SquareColor;
-                        graphics.FillRectangle(new System.Drawing.SolidBrush(color), rect);
-                    }
+                    Rectangle = new Rectangle(x * 10, y * 10, 10, 10),
+                    Brush = new SolidBrush(square.SquareColor)
+                }));
+
+                foreach (var rect in rects)
+                {
+                    var r = new System.Windows.Shapes.Rectangle();
+                    MapCanvas.Children.Add(r);
+                    r.SetValue(Canvas.TopProperty, (double)(rect.Rectangle.Top * 10));
+                    r.SetValue(Canvas.LeftProperty, (double)(rect.Rectangle.Left * 10));
+                    r.Width = 10;
+                    r.Height = 10;
+                    r.Visibility = Visibility.Visible;
                 }
             }
 
-            Dispatcher.Invoke(new Action<System.Drawing.Bitmap>(UpdateMap), picture);
+            //for (var y = 0; y < field.Count; y++)
+            //{
+            //    for (var x = 0; x < field[y].Count; x++)
+            //    {
+            //        var rect = new Rectangle(x * 10, y * 10, 10, 10);
+            //        var color = field[y][x].SquareColor;
+            //        graphics.FillRectangle(new SolidBrush(color), rect);
+            //    }
+            //}
+
+
+            //map = new Bitmap(picture);
+
+            //var img = CreateBitmapSource(picture);
+            //img.Freeze();
+
+            //Dispatcher.Invoke(new Action(() => DataContext = img));
         }
 
-        private void UpdateMap(System.Drawing.Bitmap image)
+        [DllImport("gdi32.dll")]
+        private static extern bool DeleteObject(IntPtr hObject);
+
+        private static BitmapSource CreateBitmapSource(Bitmap bitmap)
         {
-            DataContext = Imaging.CreateBitmapSourceFromHBitmap(image.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+
+            var hBitmap = bitmap.GetHbitmap();
+
+            var rect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+            var bitmapData = bitmap.LockBits(rect, ImageLockMode.ReadOnly, bitmap.PixelFormat);
+
+            var source = BitmapSource.Create(bitmap.Width, bitmap.Height,
+                bitmap.HorizontalResolution, bitmap.VerticalResolution, PixelFormats.Pbgra32, null,
+                bitmapData.Scan0, bitmapData.Stride * bitmap.Height, bitmapData.Stride);
+
+            bitmap.UnlockBits(bitmapData);
+
+            return source;
+        }
+
+        private void UpdateMap()
+        {
+            var newPicture = new Bitmap(map);
+
+            lock (field)
+            {
+
+            }
         }
     }
 }
