@@ -37,19 +37,17 @@ namespace MultiAgentLab.Classes
             }
         }
 
-        public System.Drawing.Color SquareColor
+        public Color SquareColor
         {
             get
             {
                 if (!passable)
-                    return System.Drawing.Color.Red;
-                else if (destination)
-                    return System.Drawing.Color.White;
-                else
-                {
-                    var level = (byte)(Math.Round((255.0 / 10.0) * pheromoneLevel));
-                    return System.Drawing.Color.FromArgb(0, level, 0);
-                }
+                    return Colors.Red;
+                if (destination)
+                    return Colors.White;
+                
+                var level = (byte)(Math.Round((255.0 / 10.0) * pheromoneLevel));
+                return Color.FromRgb(0, level, 0);
             }
         }
 

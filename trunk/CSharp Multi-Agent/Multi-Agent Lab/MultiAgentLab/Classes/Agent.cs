@@ -55,17 +55,37 @@ namespace MultiAgentLab.Classes
             }
             else
             {
+                var lastFourSquare = pastRoute.GetRange(pastRoute.Count - 4, 4);
+                var upBias = 1.0;
+                var downBias = 1.0;
+                var leftBias = 1.0;
+                var rightBias = 1.0;
 
-                var totalWeight = upSquare.PheremoneLevel + downSquare.PheremoneLevel + leftSquare.PheremoneLevel + rightSquare.PheremoneLevel;
+                // Trying to encourage movement away from the home.
+                if (lastFourSquare.Contains(upSquare.Position))
+                    upBias = 0.25;
+                if (lastFourSquare.Contains(downSquare.Position))
+                    downBias = 0.25;
+                if (lastFourSquare.Contains(leftSquare.Position))
+                    leftBias = 0.25;
+                if (lastFourSquare.Contains(rightSquare.Position))
+                    rightBias = 0.25;
+
+                var up = upSquare.PheremoneLevel * upBias;
+                var down = downSquare.PheremoneLevel * downBias;
+                var left = leftSquare.PheremoneLevel * leftBias;
+                var right = rightSquare.PheremoneLevel * rightBias;
+
+                var totalWeight = up + down + left + right;
                 var randNum = rand.NextDouble() * totalWeight;
 
-                if (randNum < upSquare.PheremoneLevel)
+                if (randNum < up)
                     // Move up
                     Position = upSquare.Position;
-                else if (randNum < (upSquare.PheremoneLevel + downSquare.PheremoneLevel))
+                else if (randNum < (up + down))
                     // Move down
                     Position = downSquare.Position;
-                else if (randNum < (upSquare.PheremoneLevel + downSquare.PheremoneLevel + leftSquare.PheremoneLevel))
+                else if (randNum < (up + down + left))
                     // Move left
                     Position = leftSquare.Position;
                 else
@@ -74,7 +94,7 @@ namespace MultiAgentLab.Classes
 
                 pastRoute.Add(currentSquare.Position);
 
-                currentSquare.PheremoneLevel += 0.001;
+                currentSquare.PheremoneLevel += 0.01;
             }
         }
     }

@@ -4,22 +4,16 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using MultiAgentLab.Classes;
 
 namespace MultiAgentLab
 {
-    using System.Drawing;
-    using System.Drawing.Imaging;
-    using System.Runtime.InteropServices;
+    using System.Diagnostics;
     using System.Windows.Controls;
     using System.Windows.Media;
-    using System.Windows.Shapes;
 
-    using Rectangle = System.Drawing.Rectangle;
     using Size = System.Windows.Size;
 
     /// <summary>
@@ -27,8 +21,9 @@ namespace MultiAgentLab
     /// </summary>
     public partial class Window1
     {
-        List<Agent> agentsList = new List<Agent>();
-        Timer agentTicker;
+        readonly List<Agent> agentsList = new List<Agent>();
+
+        private Timer agentTicker;
         Timer newAgentTicker;
         int count;
         Field field;
@@ -51,21 +46,21 @@ namespace MultiAgentLab
                     agent.Process(fild);
             }
 
-            foreach (var square in fild.SelectMany(row => row.Where(square => square.PheremoneLevel > 1)))
-            {
-                square.PheremoneLevel -= 0.00001;
-            }
+            //foreach (var square in fild.SelectMany(row => row.Where(square => square.PheremoneLevel > 1)))
+            //{
+            //    square.PheremoneLevel -= 0.00001;
+            //}
 
             count++;
-            if (count > 10000)
+            if (count > 10)
             {
-                agentsList.Add(new Agent(fild.StartPoint));
+                var agent = new Agent(fild.StartPoint);
+                agentsList.Add(agent);
+                Dispatcher.Invoke(new Action(() => CreateAgentImage(agent)));
                 count = 0;
             }
-        }
 
-        private void WindowLoaded(object sender, RoutedEventArgs e)
-        {
+            Dispatcher.Invoke(new Action(UpdateMap), null);
         }
 
         private void LoadMapClick(object sender, RoutedEventArgs e)
@@ -123,85 +118,113 @@ namespace MultiAgentLab
 
             field = new Field((int)data.MapSize.Width, (int)data.MapSize.Height, data.FileName);
 
+            agentsList.Add(new Agent(field.StartPoint));
+
             Dispatcher.Invoke(DispatcherPriority.Normal, new Action(DrawMap));
 
             Dispatcher.Invoke(DispatcherPriority.Normal, new Action(LoadMapComplete));
         }
 
-        private Bitmap map;
+        private void UpdateMap()
+        {
+            foreach (var rect in MapCanvas.Children.OfType<System.Windows.Shapes.Rectangle>())
+            {
+                var r = (Rect)rect.Tag;
+                rect.Fill = new SolidColorBrush(field[(int)(r.Y / 10)][(int)(r.X / 10)].SquareColor);
+                //Debug.WriteLine("Rect {0},{1}", r.X, r.Y);
+            }
+
+            foreach (var agent in MapCanvas.Children.OfType<System.Windows.Shapes.Ellipse>())
+            {
+                var a = (Agent)agent.Tag;
+                agent.SetValue(Canvas.TopProperty, a.Position.Y * 10);
+                agent.SetValue(Canvas.LeftProperty, a.Position.X * 10);
+                //Debug.WriteLine("Agent {0},{1}", a.Position.X, a.Position.Y);
+            }
+        }
 
         private void DrawMap()
         {
-            var picture = new Bitmap(field.Count * 10, field.First().Count * 10);
-            var graphics = Graphics.FromImage(picture);
+            MapCanvas.Width = field.Count * 10;
+            MapCanvas.Height = field.First().Count * 10;
 
+            var rects = field.AsParallel().SelectMany((row, y) => row.Select((square, x) => new
+            {
+                Rectangle = new Rect(x * 10, y * 10, 10, 10),
+                square.SquareColor
+            }));
+
+            foreach (var rect in rects)
+            {
+                var r = new System.Windows.Shapes.Rectangle();
+                MapCanvas.Children.Add(r);
+                r.SetValue(Canvas.TopProperty, rect.Rectangle.Top);
+                r.SetValue(Canvas.LeftProperty, rect.Rectangle.Left);
+                r.Width = 10;
+                r.Height = 10;
+                r.Fill = new SolidColorBrush(rect.SquareColor);
+                r.Tag = rect.Rectangle;
+            }
+
+            foreach (var agent in agentsList)
+            {
+                CreateAgentImage(agent);
+            }
+
+        }
+
+        private void CreateAgentImage(Agent agent)
+        {
+            var e = new System.Windows.Shapes.Ellipse();
+            MapCanvas.Children.Add(e);
+            e.SetValue(Canvas.TopProperty, agent.Position.Y * 10);
+            e.SetValue(Canvas.LeftProperty, agent.Position.X * 10);
+            e.Width = 10;
+            e.Height = 10;
+            e.Fill = Brushes.Magenta;
+            e.Tag = agent;
+        }
+
+        private void ResetMapClick(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.Invoke(new Action(ResetMap));
+        }
+
+        private void ResetMap()
+        {
             lock (field)
             {
-                var rects = field.AsParallel().SelectMany((row, y) => row.Select((square, x) => new
+                foreach (var square in field.AsParallel().SelectMany(row => row))
                 {
-                    Rectangle = new Rectangle(x * 10, y * 10, 10, 10),
-                    Brush = new SolidBrush(square.SquareColor)
-                }));
-
-                foreach (var rect in rects)
-                {
-                    var r = new System.Windows.Shapes.Rectangle();
-                    MapCanvas.Children.Add(r);
-                    r.SetValue(Canvas.TopProperty, (double)(rect.Rectangle.Top * 10));
-                    r.SetValue(Canvas.LeftProperty, (double)(rect.Rectangle.Left * 10));
-                    r.Width = 10;
-                    r.Height = 10;
-                    r.Visibility = Visibility.Visible;
+                    square.PheremoneLevel = 1.0;
                 }
             }
 
-            //for (var y = 0; y < field.Count; y++)
-            //{
-            //    for (var x = 0; x < field[y].Count; x++)
-            //    {
-            //        var rect = new Rectangle(x * 10, y * 10, 10, 10);
-            //        var color = field[y][x].SquareColor;
-            //        graphics.FillRectangle(new SolidBrush(color), rect);
-            //    }
-            //}
-
-
-            //map = new Bitmap(picture);
-
-            //var img = CreateBitmapSource(picture);
-            //img.Freeze();
-
-            //Dispatcher.Invoke(new Action(() => DataContext = img));
-        }
-
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteObject(IntPtr hObject);
-
-        private static BitmapSource CreateBitmapSource(Bitmap bitmap)
-        {
-
-            var hBitmap = bitmap.GetHbitmap();
-
-            var rect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-            var bitmapData = bitmap.LockBits(rect, ImageLockMode.ReadOnly, bitmap.PixelFormat);
-
-            var source = BitmapSource.Create(bitmap.Width, bitmap.Height,
-                bitmap.HorizontalResolution, bitmap.VerticalResolution, PixelFormats.Pbgra32, null,
-                bitmapData.Scan0, bitmapData.Stride * bitmap.Height, bitmapData.Stride);
-
-            bitmap.UnlockBits(bitmapData);
-
-            return source;
-        }
-
-        private void UpdateMap()
-        {
-            var newPicture = new Bitmap(map);
-
-            lock (field)
+            lock (agentsList)
             {
-
+                var l = MapCanvas.Children.OfType<System.Windows.Shapes.Ellipse>().ToList();
+                foreach (var e in l)
+                    MapCanvas.Children.Remove(e);
+                agentsList.Clear();
+                var agentsCount = int.Parse(AgentCountTextBox.Text);
+                for (var i = 0; i < agentsCount; i++)
+                {
+                    var agent = new Agent(field.StartPoint);
+                    agentsList.Add(agent);
+                    CreateAgentImage(agent);
+                }
             }
+
+            Dispatcher.Invoke(new Action(UpdateMap));
+        }
+
+        private void StartButtonClick(object sender, RoutedEventArgs e)
+        {
+            var interval = int.Parse(UpdateRateTextBox.Text);
+            if (agentTicker == null)
+                agentTicker = new Timer(TimerTick, field, 0, interval);
+            else
+                agentTicker.Change(0, interval);
         }
     }
 }
