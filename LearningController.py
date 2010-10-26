@@ -1,5 +1,3 @@
-from math import fabs
-from math import pi
 from math import sin
 from math import cos
 from pydoc import deque
@@ -9,6 +7,7 @@ from HorizontalMovePersonality import HorizontalMovePersonality
 from HoverFindPersonality import HoverFindPersonality
 from StopPersonality import StopPersonality
 from VerticalMovePersonality import VerticalMovePersonality
+from FurthestNewDistanceNavigatorPersonality import FurthestNewDistanceNavigatorPersonality
 from simulation import Control
 from simulation import GravityPod
 from simulation import Simulation
@@ -23,12 +22,7 @@ zeroThreshold = 1e-4
 
 class LearningControl:
 
-    # Direction Constants
-    # Numbers chosen so that -up is down and -left = right
-    up = 1
-    down = -1
-    left = 2
-    right = -2
+
 
     # Navigator Types
     furthestNewDistance = 1
@@ -94,6 +88,7 @@ class LearningControl:
         state.d2ydt2 = accel
         state.last_d2ydt2 = self.lastAccel
         state.dt = dt
+        state.sensor = sensor
 
         # Is there a current personality that is working?
         if self.personality != None and self.personality.done == False:
@@ -156,60 +151,8 @@ class LearningControl:
             elif self.navigationTechnique == self.furthestNewDistance:
                 # We're done learning. Time to navigate.
                 # Find the furthest direction that we haven't just traveled in.
-
-                upSensor = sensor[0].val
-                rightSensor = sensor[10].val
-                downSensor = sensor[20].val
-                leftSensor = sensor[30].val
-
-                newDirection = None
-                newDistance = 0
-
-                if self.direction != self.down:
-                    # If we didn't just go down, default to up.
-                    newDirection = self.up
-                    newDistance = upSensor
-                if self.direction != self.right and newDistance < rightSensor:
-                    # If we didn't just go left, go right if it will take us further
-                    newDirection = self.left
-                    newDistance = rightSensor
-                if self.direction != self.up and newDistance < downSensor:
-                    # If we didn't just go up, go down if it will take us further
-                    newDirection = self.down
-                    newDistance = downSensor
-                if self.direction != self.left and newDistance < leftSensor:
-                    # If we didn't just go right, go left if it will take us further
-                    newDirection = self.right
-                    newDistance = leftSensor
-
-                # Allow clearance from walls.
-                newDistance -= 10
-
-                if newDirection == self.up:
-                    # Going up.
-                    newCoordinate = state.y - newDistance
-                    print "Heading to Y : ", newCoordinate
-                elif newDirection == self.down:
-                    # Going down.
-                    newCoordinate = state.y + newDistance
-                    print "Heading to Y : ", newCoordinate
-                elif newDirection == self.left:
-                    # Going left.
-                    newCoordinate = state.x - newDistance
-                    print "Heading to X : ", newCoordinate
-                elif newDirection == self.right:
-                    # Going right.
-                    newCoordinate = state.x + newDistance
-                    print "Heading to X : ", newCoordinate
-
-                if fabs(newDirection) == self.up:
-                    self.personality = VerticalMovePersonality(self.hoverThrust, state, newCoordinate)
-                    self.personality.process(state)
-                elif fabs(newDirection) == self.left:
-                    self.personality = HorizontalMovePersonality(self.hoverThrust, state, newCoordinate)
-                    self.personality.process(state)
-
-                self.direction = newDirection
+                self.personality = FurthestNewDistanceNavigatorPersonality(self.hoverThrust)
+                self.personality.process(state)
             elif self.navigationTechnique == self.wallFollowing:
                 self.personality = None
                 # Alternativly, navigate by following the wall.
