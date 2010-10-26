@@ -55,7 +55,11 @@ namespace MultiAgentLab.Classes
             }
             else
             {
-                var lastFourSquare = pastRoute.GetRange(pastRoute.Count - 4, 4);
+                List<Point> lastFourSquare;
+                if (pastRoute.Count > 3)
+                    lastFourSquare = pastRoute.GetRange(pastRoute.Count - 4, 4);
+                else
+                    lastFourSquare = pastRoute;
                 var upBias = 1.0;
                 var downBias = 1.0;
                 var leftBias = 1.0;

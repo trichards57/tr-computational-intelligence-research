@@ -46,13 +46,14 @@ namespace MultiAgentLab
                     agent.Process(fild);
             }
 
-            //foreach (var square in fild.SelectMany(row => row.Where(square => square.PheremoneLevel > 1)))
-            //{
-            //    square.PheremoneLevel -= 0.00001;
-            //}
+            foreach (var square in fild.SelectMany(row => row.Where(square => square.PheremoneLevel > 1)))
+            {
+                square.PheremoneLevel -= 0.00001;
+            }
 
+            // Stick to 250 agents for the time being.
             count++;
-            if (count > 10)
+            if (count > 10 && agentsList.Count < 250)
             {
                 var agent = new Agent(fild.StartPoint);
                 agentsList.Add(agent);
