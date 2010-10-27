@@ -10,7 +10,9 @@ using MultiAgentLab.Classes;
 
 namespace MultiAgentLab
 {
+    using System.ComponentModel;
     using System.Diagnostics;
+    using System.Threading.Tasks;
     using System.Windows.Controls;
     using System.Windows.Media;
 
@@ -24,43 +26,43 @@ namespace MultiAgentLab
         readonly List<Agent> agentsList = new List<Agent>();
 
         private Timer agentTicker;
-        Timer newAgentTicker;
-        int count;
+
+        private readonly BackgroundWorker agentWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
         Field field;
 
         public Window1()
         {
             InitializeComponent();
+            agentWorker.DoWork += ProcessAgents;
+        }
+
+        public void ProcessAgents(object sender, DoWorkEventArgs args)
+        {
+            var count = 0;
+            while (!agentWorker.CancellationPending)
+            {
+                foreach (var agent in agentsList)
+                    agent.Process(field);
+
+                foreach (var square in field.AsParallel().SelectMany(row => row.AsParallel().Where(square => square.PheremoneLevel > 1 && square.Destination == false)))
+                    square.PheremoneLevel -= 0.001;
+
+                count++;
+                if (count > 10 && agentsList.Count < 250)
+                {
+                    var agent = new Agent(field.StartPoint);
+                    lock (agentsList)
+                    {
+                        agentsList.Add(agent);
+                    }
+                    Dispatcher.Invoke(new Action(() => CreateAgentImage(agent)));
+                    count = 0;
+                }
+            }
         }
 
         private void TimerTick(object state)
         {
-            var fild = state as Field;
-
-            if (fild == null)
-                throw new ArgumentException("state must be a Field", "state");
-
-            lock (agentsList)
-            {
-                foreach (var agent in agentsList)
-                    agent.Process(fild);
-            }
-
-            foreach (var square in fild.SelectMany(row => row.Where(square => square.PheremoneLevel > 1)))
-            {
-                square.PheremoneLevel -= 0.00001;
-            }
-
-            // Stick to 250 agents for the time being.
-            count++;
-            if (count > 10 && agentsList.Count < 250)
-            {
-                var agent = new Agent(fild.StartPoint);
-                agentsList.Add(agent);
-                Dispatcher.Invoke(new Action(() => CreateAgentImage(agent)));
-                count = 0;
-            }
-
             Dispatcher.Invoke(new Action(UpdateMap), null);
         }
 
@@ -226,6 +228,14 @@ namespace MultiAgentLab
                 agentTicker = new Timer(TimerTick, field, 0, interval);
             else
                 agentTicker.Change(0, interval);
+
+            agentWorker.RunWorkerAsync();
+        }
+
+        private void StopButtonClick(object sender, RoutedEventArgs e)
+        {
+            agentWorker.CancelAsync();
+            agentTicker.Change(Timeout.Infinite, Timeout.Infinite);
         }
     }
 }
