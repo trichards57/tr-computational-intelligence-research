@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media;
@@ -13,10 +10,10 @@ namespace MultiAgentLab.Classes
         private Point position;
         private double pheromoneLevel;
         private bool passable = true;
-        private bool destination = false;
+        private bool destination;
         private double travelTime;
 
-        private static Random rand = new Random();
+        public const double MaxPheremoneLevel = int.MaxValue / 2;
 
         public FieldSquare(Point position)
         {
@@ -45,8 +42,8 @@ namespace MultiAgentLab.Classes
                     return Colors.Red;
                 if (destination)
                     return Colors.White;
-                
-                var level = (byte)(Math.Round((255.0 / 10.0) * pheromoneLevel));
+
+                var level = (byte)(Math.Round((255.0 / Math.Log(MaxPheremoneLevel)) * Math.Log(pheromoneLevel)));
                 return Color.FromRgb(0, level, 0);
             }
         }
@@ -59,8 +56,8 @@ namespace MultiAgentLab.Classes
             }
             set
             {
-                if (value > 10)
-                    pheromoneLevel = 10;
+                if (value > MaxPheremoneLevel)
+                    pheromoneLevel = MaxPheremoneLevel;
                 else if (value < 0)
                     pheromoneLevel = 0;
                 else
@@ -80,7 +77,8 @@ namespace MultiAgentLab.Classes
             set
             {
                 passable = value;
-                PheremoneLevel = 0;
+                if (!value)
+                    PheremoneLevel = 0;
                 OnPropertyChanged("SquareColor");
                 OnPropertyChanged("Passable");
             }
@@ -95,6 +93,8 @@ namespace MultiAgentLab.Classes
             set
             {
                 destination = value;
+                Passable = true;
+                PheremoneLevel = MaxPheremoneLevel;
                 OnPropertyChanged("SquareColor");
                 OnPropertyChanged("Destination");
             }

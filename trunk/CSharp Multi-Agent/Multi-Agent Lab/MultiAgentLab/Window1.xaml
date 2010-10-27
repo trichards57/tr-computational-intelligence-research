@@ -24,16 +24,18 @@
                         <TextBlock>Agent Count</TextBlock>
                         <TextBox Name="AgentCountTextBox" Text="1" />
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock>Update Rate</TextBlock>
-                        <TextBox Name="UpdateRateTextBox" Text="500" />
-                        <TextBlock>ms</TextBlock>
-                    </StackPanel>
+                    
                 </StackPanel>
             </Expander>
             <Expander Header="Simulation">
                 <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Screen Update Rate</TextBlock>
+                        <TextBox Name="UpdateRateTextBox" Text="500" />
+                        <TextBlock>ms</TextBlock>
+                    </StackPanel>
                     <Button Click="StartButtonClick">Start</Button>
+                    <Button Click="StopButtonClick">Stop</Button>
                 </StackPanel>
             </Expander>
         </StackPanel>

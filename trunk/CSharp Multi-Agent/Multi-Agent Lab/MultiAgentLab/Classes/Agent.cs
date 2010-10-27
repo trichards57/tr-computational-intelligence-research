@@ -51,15 +51,12 @@ namespace MultiAgentLab.Classes
                     field[(int)p.Y][(int)p.X].PheremoneLevel += 1.0;
                 }
                 Position = StartPosition;
+                Console.WriteLine("Agent Route Length : {0}", pastRoute.Count);
                 pastRoute.Clear();
             }
             else
             {
-                List<Point> lastFourSquare;
-                if (pastRoute.Count > 3)
-                    lastFourSquare = pastRoute.GetRange(pastRoute.Count - 4, 4);
-                else
-                    lastFourSquare = pastRoute;
+                var lastFourSquare = pastRoute.Count > 3 ? pastRoute.GetRange(pastRoute.Count - 4, 4) : pastRoute;
                 var upBias = 1.0;
                 var downBias = 1.0;
                 var leftBias = 1.0;
@@ -96,9 +93,23 @@ namespace MultiAgentLab.Classes
                     // Move right
                     Position = rightSquare.Position;
 
-                pastRoute.Add(currentSquare.Position);
+                RememberRoute(currentSquare.Position);
 
-                currentSquare.PheremoneLevel += 0.01;
+                //currentSquare.PheremoneLevel += 0.01;
+            }
+        }
+
+        private void RememberRoute(Point currentSquare)
+        {
+            if (pastRoute.Contains(currentSquare))
+            {
+                // Already been here. All the exploring since was pointless...
+                var index = pastRoute.IndexOf(currentSquare);
+                pastRoute.RemoveRange(index + 1, pastRoute.Count - (index + 1));
+            }
+            else
+            {
+                pastRoute.Add(currentSquare);
             }
         }
     }
