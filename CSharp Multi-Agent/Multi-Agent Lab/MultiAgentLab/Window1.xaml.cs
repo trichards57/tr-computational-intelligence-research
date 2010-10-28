@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Win32;
-using MultiAgentLab.Classes;
+using MultiAgentLibrary;
 
 namespace MultiAgentLab
 {
@@ -23,7 +23,7 @@ namespace MultiAgentLab
     /// </summary>
     public partial class Window1
     {
-        readonly List<Agent> agentsList = new List<Agent>();
+        //readonly List<Agent> agentsList = new List<Agent>();
 
         private Timer agentTicker;
 
@@ -41,19 +41,19 @@ namespace MultiAgentLab
             var count = 0;
             while (!agentWorker.CancellationPending)
             {
-                foreach (var agent in agentsList)
+                foreach (var agent in field.AgentsList)
                     agent.Process(field);
 
                 foreach (var square in field.AsParallel().SelectMany(row => row.AsParallel().Where(square => square.PheremoneLevel > 1 && square.Destination == false)))
                     square.PheremoneLevel -= 0.001;
 
                 count++;
-                if (count > 10 && agentsList.Count < 250)
+                if (count > 10 && field.AgentsList.Count < 250)
                 {
                     var agent = new Agent(field.StartPoint);
-                    lock (agentsList)
+                    lock (field.AgentsList)
                     {
-                        agentsList.Add(agent);
+                        field.AgentsList.Add(agent);
                     }
                     Dispatcher.Invoke(new Action(() => CreateAgentImage(agent)));
                     count = 0;
@@ -121,7 +121,7 @@ namespace MultiAgentLab
 
             field = new Field((int)data.MapSize.Width, (int)data.MapSize.Height, data.FileName);
 
-            agentsList.Add(new Agent(field.StartPoint));
+            field.AgentsList.Add(new Agent(field.StartPoint));
 
             Dispatcher.Invoke(DispatcherPriority.Normal, new Action(DrawMap));
 
@@ -169,7 +169,7 @@ namespace MultiAgentLab
                 r.Tag = rect.Rectangle;
             }
 
-            foreach (var agent in agentsList)
+            foreach (var agent in field.AgentsList)
             {
                 CreateAgentImage(agent);
             }
@@ -203,17 +203,17 @@ namespace MultiAgentLab
                 }
             }
 
-            lock (agentsList)
+            lock (field.AgentsList)
             {
                 var l = MapCanvas.Children.OfType<System.Windows.Shapes.Ellipse>().ToList();
                 foreach (var e in l)
                     MapCanvas.Children.Remove(e);
-                agentsList.Clear();
+                field.AgentsList.Clear();
                 var agentsCount = int.Parse(AgentCountTextBox.Text);
                 for (var i = 0; i < agentsCount; i++)
                 {
                     var agent = new Agent(field.StartPoint);
-                    agentsList.Add(agent);
+                    field.AgentsList.Add(agent);
                     CreateAgentImage(agent);
                 }
             }
