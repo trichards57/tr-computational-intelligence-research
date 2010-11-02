@@ -1,24 +1,25 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Windows;
-using System.Windows.Media;
+using System.Drawing;
 
 namespace MultiAgentLibrary
 {
     public class FieldSquare : INotifyPropertyChanged
     {
+        public const int SuccessPheremoneLevel = 1000;
+        public const int PheremoneDecayRate = SuccessPheremoneLevel / 1000;
+
         private Point position;
-        private double pheromoneLevel;
+        private int pheromoneLevel;
         private bool passable = true;
         private bool destination;
-        private double travelTime;
 
-        public const double MaxPheremoneLevel = int.MaxValue / 2;
+        public const int MaxPheremoneLevel = int.MaxValue;
 
         public FieldSquare(Point position)
         {
             Position = position;
-            PheremoneLevel = 1.0;
+            PheremoneLevel = 1;
         }
 
         public Point Position
@@ -39,16 +40,16 @@ namespace MultiAgentLibrary
             get
             {
                 if (!passable)
-                    return Colors.Red;
+                    return Color.Red;
                 if (destination)
-                    return Colors.White;
+                    return Color.White;
 
                 var level = (byte)(Math.Round((255.0 / Math.Log(MaxPheremoneLevel)) * Math.Log(pheromoneLevel)));
-                return Color.FromRgb(0, level, 0);
+                return Color.FromArgb(0, level, 0);
             }
         }
 
-        public double PheremoneLevel
+        public int PheremoneLevel
         {
             get
             {
@@ -97,19 +98,6 @@ namespace MultiAgentLibrary
                 PheremoneLevel = MaxPheremoneLevel;
                 OnPropertyChanged("SquareColor");
                 OnPropertyChanged("Destination");
-            }
-        }
-
-        public double TravelTime
-        {
-            get
-            {
-                return travelTime;
-            }
-            set
-            {
-                travelTime = value;
-                OnPropertyChanged("TravelTime");
             }
         }
 
