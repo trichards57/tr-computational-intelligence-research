@@ -6,8 +6,8 @@ namespace MultiAgentLibrary
 {
     public class FieldSquare : INotifyPropertyChanged
     {
-        public const int SuccessPheremoneLevel = 1000;
-        public const int PheremoneDecayRate = SuccessPheremoneLevel / 1000;
+        public const int SuccessPheremoneLevel = 2000;
+        public const int PheremoneDecayRate = SuccessPheremoneLevel * 4 / 1000;
 
         private Point position;
         private int pheromoneLevel;
