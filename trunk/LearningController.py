@@ -1,5 +1,7 @@
 from math import sin
 from math import cos
+from math import tan
+from math import pi
 from pydoc import deque
 
 from HorizontalMoveLearnerPersonality import HorizontalMoveLearnerPersonality
@@ -21,8 +23,6 @@ from simulation import World
 zeroThreshold = 1e-4
 
 class LearningControl:
-
-
 
     # Navigator Types
     furthestNewDistance = 1
@@ -56,7 +56,7 @@ class LearningControl:
         # List of personalities to be used
         self.personalities = deque()
 
-        self.navigationTechnique = self.furthestNewDistance
+        self.navigationTechnique = self.wallFollowing
 
         self.direction = 0
 
@@ -130,11 +130,6 @@ class LearningControl:
 
                 # Make a VerticalMovePersonality the active personality
                 self.personality = VerticalMovePersonality(self.hoverThrust, state, centerHeight)
-                # Queue up two more personalities to test movement to and fro
-                #backToStartMove = VerticalMovePersonality(self.hoverThrust, state, bottomPosition - (passageHeight / 4))
-                #backToCenterMove = VerticalMovePersonality(self.hoverThrust, state, centerHeight - (passageHeight / 4))
-                #self.personalities.appendleft(backToStartMove)
-                #self.personalities.appendleft(backToCenterMove)
                 # Run the first cycle
                 self.personality.process(state)
                 # We have started to center.
@@ -171,30 +166,109 @@ class LearningControl:
                 if nextSensor >= 40:
                     nextSensor -= 40
 
-                x1 = state.x + sensor[closestSensor].val * sin(sensor[closestSensor].ang)
-                y1 = state.y + sensor[closestSensor].val * cos(sensor[closestSensor].ang)
+                class Point:
+                    def __init__(self):
+                        self.x = 0
+                        self.y = 0
 
-                x2 = state.x + sensor[nextSensor].val * sin(sensor[nextSensor].ang)
-                y2 = state.y + sensor[nextSensor].val * cos(sensor[nextSensor].ang)
+                def calculatePoint(originX, originY, range, angle):
+                    output = Point()
+                    output.x = originX + range * sin(angle)
+                    output.y = originY + range * cos(angle)
+                    return output
 
-                print "Point 1 : (", x1, ",", y1, ")"
-                print "Point 2 : (", x2, ",", y2, ")"
+                point1 = calculatePoint(state.x, state.y, sensor[closestSensor].val, sensor[closestSensor].ang)
+                point2 = calculatePoint(state.x, state.y, sensor[nextSensor].val, sensor[nextSensor].ang)
+
+                print "Point 1 : (", point1.x, ",", point1.y, ")"
+                print "Point 2 : (", point2.x, ",", point2.y, ")"
 
                 lineM = 0
                 lineC = 0
 
-                if x1 == x2:
+                if point1.x == point2.x:
                     # Vertical line. If a discontinuity is detected, but not on
                     # sensor 0 or 20 (which are pointing parallel to the line),
                     # move up to it. If no discontinuity is detected, creep along
                     # the line until one is found.
                     print "Vertical Wall"
-                elif y1 == y2:
+                    if closestSensor > 20:
+                        stopPoint = 20
+                    else:
+                        stopPoint = 0
+                    
+                    # Make sure we don't hit a wall ahead or below.
+                    topY = (state.y - sensor[0].val) + 10
+                    bottomY = (state.y + sensor[20].val) - 10
+                    destinationY = -1
+
+                    for s in range(closestSensor, stopPoint, -1):
+                        point = calculatePoint(state.x, state.y, sensor[s].val, sensor[s].ang)
+                        if point.x != point1.x and destinationY == -1:
+                            # Change in the wall that we haven't already seen.
+                            destinationY = point1.x * tan(sensor[s].ang)
+
+                    if destinationY == -1:
+                        # We didn't find a discontinuity
+                        if closestSensor == 10:
+                            # Creep up a little.
+                            destinationY = state.y - 10
+                        else:
+                            destinationY = state.y + 10
+
+                    if destinationY < topY:
+                        destinationY = topY
+                    elif destinationY > bottomY:
+                        destinationY = bottomY
+
+                    self.personality = VerticalMovePersonality(self.hoverThrust, state, destinationY)
+                    self.personality.process(state)
+
+                elif point1.y == point2.y:
                     # Horizontal line. If a discontinuity is detected, but not on
                     # sensor 10 or 30 (which are pointing parallel to the line),
                     # move up to it. If no discontinuity is detected, creep along
                     # the line until one is found.
                     print "Horizontal Wall"
+                    if closestSensor == 20:
+                        startPoint = 19
+                        stopPoint = 10
+                    else:
+                        startPoint = 39
+                        stopPoint = 30
+
+                    # Make sure we don't hit a wall ahead or below.
+                    rightX = (state.x + sensor[30].val) - 10
+                    leftX = (state.x - sensor[10].val) + 10
+                    destinationX = -1
+
+                    print "Sensor Range : ", startPoint, " - ", stopPoint
+                    for s in range(startPoint, stopPoint, -1):
+                        point = calculatePoint(state.x, state.y, sensor[s].val, sensor[s].ang)
+                        if point.y != point1.y and destinationX == -1:
+                            # Change in the wall that we haven't already seen.
+                            destinationX = state.y / tan(2*pi - (sensor[s].ang - pi))
+                            print "Sensor", s
+                            print "Ang ", sensor[s].ang / pi, " Range ", sensor[s].val
+                            print "Point (", point.x, ",", point.y, ")"
+                            print "Calculated destination : ", destinationX
+
+                    if destinationX == -1:
+                        print "Creep. Sensor : ", closestSensor
+                        # We didn't find a discontinuity
+                        if closestSensor == 0:
+                            # Creep up a little.
+                            destinationX = state.x + 10
+                        else:
+                            destinationX = state.x - 10
+
+                    if destinationX < leftX:
+                        destinationX = leftX
+                    elif destinationX > rightX:
+                        destinationX = rightX
+
+                    self.personality = HorizontalMovePersonality(self.hoverThrust, state, destinationX)
+                    self.personality.process(state)
                 else:
                     # Arbitary diagonal wall. If a discontinuity is detected on
                     # a sensor that should be able to detect the wall, move up to
@@ -233,5 +307,7 @@ world       = World("world.txt",pods)
 sim         = Simulation(world,dt)
 #uncomment the next line to hide the walls.
 #sim.world.blind=True
+
+sim.frameskipfactor = 50
 
 sim.run()

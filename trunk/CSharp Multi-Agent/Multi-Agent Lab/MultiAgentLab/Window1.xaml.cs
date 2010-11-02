@@ -41,11 +41,7 @@ namespace MultiAgentLab
             var count = 0;
             while (!agentWorker.CancellationPending)
             {
-                foreach (var agent in field.AgentsList)
-                    agent.Process(field);
-
-                foreach (var square in field.AsParallel().SelectMany(row => row.AsParallel().Where(square => square.PheremoneLevel > 1 && square.Destination == false)))
-                    square.PheremoneLevel -= 0.001;
+                field.CycleAgents();
 
                 count++;
                 if (count > 10 && field.AgentsList.Count < 250)
@@ -134,7 +130,6 @@ namespace MultiAgentLab
             {
                 var r = (Rect)rect.Tag;
                 rect.Fill = new SolidColorBrush(field[(int)(r.Y / 10)][(int)(r.X / 10)].SquareColor);
-                //Debug.WriteLine("Rect {0},{1}", r.X, r.Y);
             }
 
             foreach (var agent in MapCanvas.Children.OfType<System.Windows.Shapes.Ellipse>())
@@ -142,7 +137,6 @@ namespace MultiAgentLab
                 var a = (Agent)agent.Tag;
                 agent.SetValue(Canvas.TopProperty, a.Position.Y * 10);
                 agent.SetValue(Canvas.LeftProperty, a.Position.X * 10);
-                //Debug.WriteLine("Agent {0},{1}", a.Position.X, a.Position.Y);
             }
         }
 
