@@ -46,12 +46,14 @@ namespace MultiAgentLibrary
 
             if (currentSquare.Destination)
             {
+                int count = 0;
                 foreach (var p in pastRoute)
                 {
                     lock (field)
                     {
-                        field[(int)p.Y][(int)p.X].PheremoneLevel += FieldSquare.SuccessPheremoneLevel;
+                        field[(int)p.Y][(int)p.X].PheremoneLevel += (FieldSquare.SuccessPheremoneLevel - FieldSquare.PheremoneDecayRate * count);
                     }
+                    count++;
                 }
                 Position = StartPosition;
                 Console.WriteLine("Agent Route Length : {0}", pastRoute.Count);
