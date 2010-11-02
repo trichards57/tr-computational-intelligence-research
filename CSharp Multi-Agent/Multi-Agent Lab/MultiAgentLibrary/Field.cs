@@ -6,8 +6,6 @@ using System.Linq;
 
 namespace MultiAgentLibrary
 {
-    using System.Diagnostics;
-    using System.Threading.Tasks;
     using System.Threading;
     using System.Drawing;
 
