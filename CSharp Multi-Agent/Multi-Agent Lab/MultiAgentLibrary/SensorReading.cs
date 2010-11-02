@@ -1,15 +1,16 @@
 ﻿namespace MultiAgentLibrary
 {
     using System.Windows;
+    using System.Drawing;
 
     public struct SensorReading
     {
-        public double Range { get; set; }
+        public float Range { get; set; }
 
-        public double Angle { get; set; }
+        public float Angle { get; set; }
 
         public SensorState State { get; set; }
 
-        public Point Origin { get; set; }
+        public PointF Origin { get; set; }
     }
 }

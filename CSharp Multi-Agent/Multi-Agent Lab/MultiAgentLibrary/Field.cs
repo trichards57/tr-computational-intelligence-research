@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Windows;
 
 namespace MultiAgentLibrary
 {
     using System.Diagnostics;
     using System.Threading.Tasks;
     using System.Threading;
+    using System.Drawing;
 
     public class Field : ObservableCollection<FieldRow>
     {
@@ -45,26 +45,26 @@ namespace MultiAgentLibrary
 
             // Read the file in to memory.
             // Convert to a list to make sure all the reading is done now, not on demand.
-            var lines = File.ReadLines(filename).ToList();
+            var lines = File.ReadAllLines(filename);
 
             // Work out the starting point.
             var firstLineParts = lines.First().Split(new[] { "," }, 3, StringSplitOptions.RemoveEmptyEntries);
-            StartPoint = new Point(double.Parse(firstLineParts[0]), double.Parse(firstLineParts[1]));
+            var origStartPoint = new PointF(float.Parse(firstLineParts[0]), float.Parse(firstLineParts[1]));
 
             // Split each line up in to a list of readings, then merge them all together.
             // Don't care about order, so can be done in parallel.
-            var readings = lines.AsParallel().SelectMany(l =>
+            var rawPoints = lines.AsParallel().SelectMany(l =>
                 {
                     var parts = l.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-                    var origin = new Point(double.Parse(parts[0]), double.Parse(parts[1]));
+                    var origin = new PointF(float.Parse(parts[0]), float.Parse(parts[1]));
 
                     var output = new List<SensorReading>();
                     for (var i = 2; i < parts.Length; i += 3)
                     {
                         var reading = new SensorReading
                         {
-                            Angle = double.Parse(parts[i]),
-                            Range = double.Parse(parts[i + 1]),
+                            Angle = float.Parse(parts[i]),
+                            Range = float.Parse(parts[i + 1]),
                             State = (SensorState)Enum.Parse(typeof(SensorState), parts[i + 2], true),
                             Origin = origin
                         };
@@ -72,15 +72,11 @@ namespace MultiAgentLibrary
                         output.Add(reading);
                     }
                     return output;
-                });
-
-            // Process each reading in to a coordinate and a state. Again, order is irrelevant, so can be done in
-            // in parallel.
-            var rawPoints = readings.Select(r => new
-            {
-                Point = new Point(r.Origin.X + r.Range * Math.Sin(r.Angle), r.Origin.Y + r.Range * Math.Cos(r.Angle)),
-                r.State
-            });
+                }).Select(r => new
+                                    {
+                                        Point = new PointF(r.Origin.X + r.Range * (float)Math.Sin(r.Angle), r.Origin.Y + r.Range * (float)Math.Cos(r.Angle)),
+                                        r.State
+                                    });
 
             // Work out the dimensions of the map
             var maxX = rawPoints.Max(p => p.Point.X);
@@ -91,32 +87,35 @@ namespace MultiAgentLibrary
             var xRectSize = maxX / (this.First().Count - 1);
 
             // Scale the starting point
-            StartPoint = new Point((int)Math.Round(StartPoint.X / xRectSize), (int)Math.Round(StartPoint.Y / yRectSize));
-            
+            StartPoint = new Point((int)Math.Round(origStartPoint.X / xRectSize), (int)Math.Round(origStartPoint.Y / yRectSize));
+
             // Process each sensor point and transfer to the new map.
             // Can't do this parallel.  Too much chance of race conditions.
             foreach (var p in rawPoints.ToList())
             {
-                var newPoint = new Point(Math.Round(p.Point.X / xRectSize), Math.Round(p.Point.Y / yRectSize));
+                var newPoint = new Point((int)Math.Round(p.Point.X / xRectSize), (int)Math.Round(p.Point.Y / yRectSize));
 
                 if (p.State == SensorState.End)
                 {
-                    this[(int)newPoint.Y][(int)newPoint.X].Destination = true;
-                    this[(int)newPoint.Y][(int)newPoint.X].Passable = true;
+                    this[newPoint.Y][newPoint.X].Destination = true;
+                    this[newPoint.Y][newPoint.X].Passable = true;
                 }
-                else if (p.State == SensorState.Boundary && this[(int)newPoint.Y][(int)newPoint.X].Destination == false)
-                    this[(int)newPoint.Y][(int)newPoint.X].Passable = false;
+                else if (p.State == SensorState.Boundary && this[newPoint.Y][newPoint.X].Destination == false)
+                    this[newPoint.Y][newPoint.X].Passable = false;
             }
         }
 
         public void CycleAgents()
         {
-            foreach (var agent in AgentsList)
-                agent.Process(this);
+            var result = Parallel.ForEach(AgentsList, agent => agent.Process(this));
 
-            var result = Parallel.ForEach(this.SelectMany(row => row.Where(square => square.PheremoneLevel > 1 && square.Destination == false)), 
-                square => {
-                    square.PheremoneLevel -= 0.001;
+            while (!result.IsCompleted)
+                Thread.Sleep(1);
+
+            result = Parallel.ForEach(this.SelectMany(row => row.Where(square => square.PheremoneLevel > 1 && square.Destination == false)),
+                square =>
+                {
+                    square.PheremoneLevel -= FieldSquare.PheremoneDecayRate;
                 });
 
             while (!result.IsCompleted)

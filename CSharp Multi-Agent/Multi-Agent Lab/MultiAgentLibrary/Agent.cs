@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows;
+using System.Drawing;
 
 namespace MultiAgentLibrary
 {
@@ -16,8 +16,6 @@ namespace MultiAgentLibrary
 
     public class Agent
     {
-        
-
         private Point StartPosition;
 
         public Point Position { get; set; }
@@ -50,7 +48,10 @@ namespace MultiAgentLibrary
             {
                 foreach (var p in pastRoute)
                 {
-                    field[(int)p.Y][(int)p.X].PheremoneLevel += 1.0;
+                    lock (field)
+                    {
+                        field[(int)p.Y][(int)p.X].PheremoneLevel += FieldSquare.SuccessPheremoneLevel;
+                    }
                 }
                 Position = StartPosition;
                 Console.WriteLine("Agent Route Length : {0}", pastRoute.Count);
@@ -96,8 +97,6 @@ namespace MultiAgentLibrary
                     Position = rightSquare.Position;
 
                 RememberRoute(currentSquare.Position);
-
-                //currentSquare.PheremoneLevel += 0.01;
             }
         }
 
