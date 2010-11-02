@@ -9,6 +9,7 @@ namespace MultiAgentLibrary
 {
     using System.Diagnostics;
     using System.Threading.Tasks;
+    using System.Threading;
 
     public class Field : ObservableCollection<FieldRow>
     {
@@ -106,6 +107,20 @@ namespace MultiAgentLibrary
                 else if (p.State == SensorState.Boundary && this[(int)newPoint.Y][(int)newPoint.X].Destination == false)
                     this[(int)newPoint.Y][(int)newPoint.X].Passable = false;
             }
+        }
+
+        public void CycleAgents()
+        {
+            foreach (var agent in AgentsList)
+                agent.Process(this);
+
+            var result = Parallel.ForEach(this.SelectMany(row => row.Where(square => square.PheremoneLevel > 1 && square.Destination == false)), 
+                square => {
+                    square.PheremoneLevel -= 0.001;
+                });
+
+            while (!result.IsCompleted)
+                Thread.Sleep(1);
         }
     }
 }

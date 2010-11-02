@@ -39,4 +39,5 @@ let CreateSquare position squareType =
 
     { Position = position; PheromoneLevel = (calcPheromone squareType); Type = squareType}
 
-let CreateField width height 
+let CreateField width height =
+    "Fix Me"
