@@ -38,6 +38,13 @@ namespace MultiAgentLibrary
             var x = (int)Position.X;
             var y = (int)Position.Y;
 
+            if (x == 0 || x == field.First().Count - 1 || x == 0 || x == field.Count - 1)
+            {
+                Position = StartPosition;
+                Console.WriteLine("Agent got itself stuck!");
+                pastRoute.Clear();
+            }
+
             var currentSquare = field[y][x];
             var upSquare = field[y - 1][x];
             var downSquare = field[y + 1][x];
@@ -46,14 +53,13 @@ namespace MultiAgentLibrary
 
             if (currentSquare.Destination)
             {
-                int count = 0;
+                var sizeScale = (1000 / pastRoute.Count) * 0.1;
                 foreach (var p in pastRoute)
                 {
                     lock (field)
                     {
-                        field[(int)p.Y][(int)p.X].PheremoneLevel += (FieldSquare.SuccessPheremoneLevel - FieldSquare.PheremoneDecayRate * count);
+                        field[(int)p.Y][(int)p.X].PheremoneLevel += (uint)(FieldSquare.SuccessPheremoneLevel * sizeScale);
                     }
-                    count++;
                 }
                 Position = StartPosition;
                 Console.WriteLine("Agent Route Length : {0}", pastRoute.Count);

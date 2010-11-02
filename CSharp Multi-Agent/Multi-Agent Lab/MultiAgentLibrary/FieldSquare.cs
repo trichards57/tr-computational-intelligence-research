@@ -6,15 +6,15 @@ namespace MultiAgentLibrary
 {
     public class FieldSquare : INotifyPropertyChanged
     {
-        public const int SuccessPheremoneLevel = 2000;
-        public const int PheremoneDecayRate = SuccessPheremoneLevel * 4 / 1000;
+        public const int SuccessPheremoneLevel = 1000;
+        public const int PheremoneDecayRate = (int)(SuccessPheremoneLevel) / 1000;
 
         private Point position;
-        private int pheromoneLevel;
+        private uint pheromoneLevel;
         private bool passable = true;
         private bool destination;
 
-        public const int MaxPheremoneLevel = int.MaxValue;
+        public const uint MaxPheremoneLevel = uint.MaxValue;
 
         public FieldSquare(Point position)
         {
@@ -49,7 +49,7 @@ namespace MultiAgentLibrary
             }
         }
 
-        public int PheremoneLevel
+        public uint PheremoneLevel
         {
             get
             {
