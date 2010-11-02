@@ -2,7 +2,7 @@ from simulation import *
 import pygame 
 
 #
-#    Manual drive a car around a track
+#    gravity pod around the track
 #
 
 
@@ -13,10 +13,10 @@ class CursorControl:
         keyinput = pygame.key.get_pressed()
 
         if keyinput[pg.K_LEFT]:
-            control.left=.4
+            control.left=1
 
         if keyinput[pg.K_RIGHT]:
-            control.right=.4
+            control.right=1
 
         if keyinput[pg.K_UP]:
             control.up=1
@@ -32,18 +32,16 @@ dt          =.1
 brain       = CursorControl()
 nSensors    = 40
 sensorRange = 2000
-pod         = CarPod(nSensors,sensorRange,brain,(255,0,0))
-# pod.slip_speed_max=1     # testing ice
-#pod         = GravityPod(nSensors,sensorRange,brain,(255,0,0))
-pods        = [pod]
-world       = World("world.txt",pods)
+pod1         = CarPod(nSensors,sensorRange,brain,(255,255,255))
+#pod2         = GravityPod(nSensors,sensorRange,brain,(255,255,255))
+#pod1         = SimplePod(nSensors,sensorRange,brain,(255,255,255))
+pods        = [pod1]
+world       = World("rect_world.txt",pods)
 sim         = Simulation(world,dt)
 
 #uncomment the next line to hide the walls.
-
-
 #sim.world.blind=True
-#sim.frameskipfactor=10
 
+sim.slowMotionFactor=1
 
 sim.run()
