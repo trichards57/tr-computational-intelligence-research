@@ -8,6 +8,7 @@ namespace MultiAgentLibrary
 {
     using System.Threading;
     using System.Drawing;
+    using System.Threading.Tasks;
 
     public class Field : ObservableCollection<FieldRow>
     {

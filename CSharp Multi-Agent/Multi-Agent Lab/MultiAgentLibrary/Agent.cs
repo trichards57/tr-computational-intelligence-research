@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Drawing;
 
 namespace MultiAgentLibrary
@@ -16,31 +15,31 @@ namespace MultiAgentLibrary
 
     public class Agent
     {
-        private Point StartPosition;
+        private readonly Point startPosition;
 
         public Point Position { get; set; }
 
         public bool FoundEnd { get; set; }
 
-        private List<Point> pastRoute = new List<Point>();
+        private readonly List<Point> pastRoute = new List<Point>();
 
-        private Random rand = new Random();
+        private readonly Random rand = new Random();
 
         public Agent(Point startPosition)
         {
             Position = startPosition;
-            StartPosition = startPosition;
+            this.startPosition = startPosition;
             FoundEnd = false;
         }
 
         public void Process(Field field)
         {
-            var x = (int)Position.X;
-            var y = (int)Position.Y;
+            var x = Position.X;
+            var y = Position.Y;
 
             if (x == 0 || x == field.First().Count - 1 || x == 0 || x == field.Count - 1)
             {
-                Position = StartPosition;
+                Position = startPosition;
                 Console.WriteLine("Agent got itself stuck!");
                 pastRoute.Clear();
             }
@@ -58,10 +57,10 @@ namespace MultiAgentLibrary
                 {
                     lock (field)
                     {
-                        field[(int)p.Y][(int)p.X].PheremoneLevel += (uint)(FieldSquare.SuccessPheremoneLevel * sizeScale);
+                        field[p.Y][p.X].PheremoneLevel += (uint)(FieldSquare.SuccessPheremoneLevel * sizeScale);
                     }
                 }
-                Position = StartPosition;
+                Position = startPosition;
                 Console.WriteLine("Agent Route Length : {0}", pastRoute.Count);
                 pastRoute.Clear();
             }
