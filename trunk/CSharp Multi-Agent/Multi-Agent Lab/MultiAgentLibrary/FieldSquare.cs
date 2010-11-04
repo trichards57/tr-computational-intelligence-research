@@ -7,7 +7,7 @@ namespace MultiAgentLibrary
     public class FieldSquare : INotifyPropertyChanged
     {
         public const int SuccessPheremoneLevel = 1000;
-        public const int PheremoneDecayRate = (int)(SuccessPheremoneLevel) / 1000;
+        public const int PheremoneDecayRate = (SuccessPheremoneLevel) / 1000;
 
         private Point position;
         private uint pheromoneLevel;
@@ -94,8 +94,11 @@ namespace MultiAgentLibrary
             set
             {
                 destination = value;
-                Passable = true;
-                PheremoneLevel = MaxPheremoneLevel;
+                if (destination)
+                {
+                    Passable = true;
+                    PheremoneLevel = MaxPheremoneLevel;
+                }
                 OnPropertyChanged("SquareColor");
                 OnPropertyChanged("Destination");
             }
