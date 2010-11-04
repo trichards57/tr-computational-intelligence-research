@@ -35,7 +35,7 @@ sensorRange = 2000
 #pod         = CarPod(nSensors,sensorRange,brain,(255,0,0))
 pod         = GravityPod(nSensors,sensorRange,brain,(255,0,0))
 pods        = [pod]
-world       = World("rectworld.txt",pods)
+world       = World("rect_world.txt",pods)
 sim         = Simulation(world,dt)
 
 #uncomment the next line to hide the walls.
