@@ -100,6 +100,26 @@ namespace MultiAgentConsole
                 }
                 field.CycleAgents();
                 Console.WriteLine("Cycle : {0}", i);
+
+                if (i % 10 == 0)
+                {
+                var oImage = new System.Drawing.Bitmap(mapWidth * 10, mapHeight * 10);
+                using (var graphics = System.Drawing.Graphics.FromImage(oImage))
+                {
+                    foreach (var square in field.SelectMany(r => r))
+                    {
+                        var col = System.Drawing.Color.FromArgb(square.SquareColor.A, square.SquareColor.R, square.SquareColor.G, square.SquareColor.B);
+                        graphics.FillRectangle(new SolidBrush(col), (int)square.Position.X * 10, (int)square.Position.Y * 10, 10, 10);
+                    }
+                    foreach (var agent in field.AgentsList)
+                    {
+                        graphics.FillEllipse(Brushes.Yellow, (int)agent.Position.X * 10, (int)agent.Position.Y * 10, 10, 10);
+                    }
+                }
+
+                oImage.Save(string.Format(@".\Frames\output{0:00000000}.gif", i), ImageFormat.Gif);
+                oImage.Dispose();
+                }
             }
 
             Console.WriteLine("Simulation stopped.");
@@ -121,7 +141,7 @@ namespace MultiAgentConsole
                 }
             }
 
-            outputImage.Save("output.bmp", ImageFormat.Bmp);
+            outputImage.Save("output.gif", ImageFormat.Gif);
 
             Console.WriteLine("Image written.");
             Console.WriteLine("Finished...");
