@@ -33,6 +33,7 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/Classes/StringTools.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/Classes/Agent.o \
 	${OBJECTDIR}/Classes/Field.o \
@@ -62,6 +63,11 @@ LDLIBSOPTIONS=
 dist/Debug/MinGW-Windows/multiagent.exe: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/MinGW-Windows
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/multiagent ${OBJECTFILES} ${LDLIBSOPTIONS} 
+
+${OBJECTDIR}/Classes/StringTools.o: Classes/StringTools.cpp 
+	${MKDIR} -p ${OBJECTDIR}/Classes
+	${RM} $@.d
+	$(COMPILE.cc) -g -Iinclude -MMD -MP -MF $@.d -o ${OBJECTDIR}/Classes/StringTools.o Classes/StringTools.cpp
 
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}

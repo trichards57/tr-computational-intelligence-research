@@ -23,6 +23,7 @@ public:
     static const unsigned int SuccessPheremoneLevel = 1000;
     static const unsigned int PheremoneDecayLevel = SuccessPheremoneLevel / 1000;
     const unsigned int MaxPheremoneLevel;
+    FieldSquare();
     FieldSquare(Point);
     virtual ~FieldSquare();
 

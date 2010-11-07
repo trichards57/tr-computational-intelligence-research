@@ -7,6 +7,11 @@
 
 #include "FieldSquare.h"
 
+FieldSquare::FieldSquare()
+    : MaxPheremoneLevel(std::numeric_limits<unsigned int>::max()), pheremoneLevel(1)
+{
+}
+
 FieldSquare::FieldSquare(Point location)
     : MaxPheremoneLevel(std::numeric_limits<unsigned int>::max()),
     position(location), pheremoneLevel(1)

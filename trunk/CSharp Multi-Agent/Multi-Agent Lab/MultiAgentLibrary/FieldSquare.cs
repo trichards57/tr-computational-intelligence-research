@@ -16,6 +16,8 @@ namespace MultiAgentLibrary
 
         public const uint MaxPheremoneLevel = uint.MaxValue;
 
+        public object LockObject = new object();
+
         public FieldSquare(Point position)
         {
             Position = position;
