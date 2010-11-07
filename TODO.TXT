@@ -1,6 +1,12 @@
-Current navigation too primitive. Implement wall following.
-Implement route saving, optimizing, then using to make solving more efficient.
-Speed up pod. Implement constant acceleration flight as well as constant speed, for use once path has been optimised.
-Implement assume stopped if hitting a wall.
 Implement landing routine.
-Test horizontal thrusting accuracy. If unacceptable, improve, or ditch the neural net. Work out how the function derived relates to hover-thrust.
+Implement navigation using route.csv.
+Redesign in to multi-part controllers:
+    Navigators
+        Keyboard direction navigator
+        Keyboard coordinate navigator
+        Longest distance (horizontal/vertical) navigator
+        Longest distance (any direction) navigator
+        Optimised route (from multi-agent) navigator
+    Controllers
+        Rule based controller
+        PD Controller
