@@ -10,19 +10,27 @@
 
 #include "Point.h"
 #include "Agent.h"
+#include "FieldSquare.h"
 #include <string>
+#include <exception>
+
+class InvalidFileException : public std::exception
+{
+    virtual const char* what() const throw()
+    {
+        return "Invalid Data File Specified";
+    }
+};
 
 class Field {
 public:
-    Field(int width, int height);
-    Field(int width) : Field(width, width) {};
     Field(int width, int height, std::string filename);
     virtual ~Field();
     void CycleAgents();
 private:
     Point startPoint;
     Agent *agents;
-    
+    FieldSquare *squares;
 };
 
 #endif	/* FIELD_H */

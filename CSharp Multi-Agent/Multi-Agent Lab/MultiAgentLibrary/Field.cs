@@ -10,21 +10,49 @@ namespace MultiAgentLibrary
     using System.Drawing;
     using System.Threading.Tasks;
 
-    public class Field : ObservableCollection<FieldRow>
+    public class Field
     {
         public Point StartPoint { get; set; }
 
         public List<Agent> AgentsList { get; private set; }
+
+        public List<Point> OriginalRoute { get; private set; }
+
+        public List<Point> ShortestRoute { get; private set; }
+
+        private readonly FieldSquare[] squares;
+        public ReadOnlyCollection<FieldSquare> Squares
+        {
+            get
+            {
+                return new ReadOnlyCollection<FieldSquare>(squares);
+            }
+        }
+
+        public int Width { get; set; }
+
+        public int Height { get; set; }
+
+        public SizeF SquareSize { get; set; }
 
         public Field(int width) : this(width, width) { }
 
         public Field(int width, int height)
         {
             AgentsList = new List<Agent>();
-            for (var i = 0; i < height; i++)
+            squares = new FieldSquare[width * height];
+            OriginalRoute = new List<Point>();
+            ShortestRoute = new List<Point>();
+
+            for (var x = 0; x < width; x++)
             {
-                Add(new FieldRow(i, width));
+                for (var y = 0; y < height; y++)
+                {
+                    squares[x + y * width] = new FieldSquare(new Point(x, y));
+                }
             }
+            Width = width;
+            Height = height;
         }
 
         public Field(int width, int height, string filename)
@@ -50,6 +78,8 @@ namespace MultiAgentLibrary
             var firstLineParts = lines.First().Split(new[] { "," }, 3, StringSplitOptions.RemoveEmptyEntries);
             var origStartPoint = new PointF(float.Parse(firstLineParts[0]), float.Parse(firstLineParts[1]));
 
+            var unscaledOriginalRoute = new List<PointF>();
+
             // Split each line up in to a list of readings, then merge them all together.
             // Don't care about order, so can be done in parallel.
             var rawPoints = lines.AsParallel().SelectMany(l =>
@@ -57,7 +87,10 @@ namespace MultiAgentLibrary
                     var parts = l.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
                     var origin = new PointF(float.Parse(parts[0]), float.Parse(parts[1]));
 
+                    unscaledOriginalRoute.Add(origin);
+
                     var output = new List<SensorReading>();
+
                     for (var i = 2; i < parts.Length; i += 3)
                     {
                         var reading = new SensorReading
@@ -77,31 +110,42 @@ namespace MultiAgentLibrary
                                         r.State
                                     });
 
+
+
             // Work out the dimensions of the map
             var maxX = rawPoints.Max(p => p.Point.X);
             var maxY = rawPoints.Max(p => p.Point.Y);
 
             // Get the size of each new map square
-            var yRectSize = maxY / (Count - 1);
-            var xRectSize = maxX / (this.First().Count - 1);
+            var yRectSize = maxY / (height - 1);
+            var xRectSize = maxX / (width - 1);
+            SquareSize = new SizeF(xRectSize, yRectSize);
 
             // Scale the starting point
             StartPoint = new Point((int)Math.Round(origStartPoint.X / xRectSize), (int)Math.Round(origStartPoint.Y / yRectSize));
 
-            // Process each sensor point and transfer to the new map.
-            // Can't do this parallel.  Too much chance of race conditions.
-            foreach (var p in rawPoints.ToList())
-            {
-                var newPoint = new Point((int)Math.Round(p.Point.X / xRectSize), (int)Math.Round(p.Point.Y / yRectSize));
+            OriginalRoute.AddRange(unscaledOriginalRoute.Select(p => new Point((int)Math.Round(p.X / xRectSize), (int)Math.Round(p.Y / yRectSize))));
 
-                if (p.State == SensorState.End)
+            var result = Parallel.ForEach(rawPoints, p =>
                 {
-                    this[newPoint.Y][newPoint.X].Destination = true;
-                    this[newPoint.Y][newPoint.X].Passable = true;
-                }
-                else if (p.State == SensorState.Boundary && this[newPoint.Y][newPoint.X].Destination == false)
-                    this[newPoint.Y][newPoint.X].Passable = false;
-            }
+                    var newPoint = new Point((int)Math.Round(p.Point.X / xRectSize), (int)Math.Round(p.Point.Y / yRectSize));
+
+                    var index = newPoint.X + newPoint.Y * height;
+
+                    lock (squares[index].LockObject)
+                    {
+                        if (p.State == SensorState.End)
+                        {
+                            squares[index].Destination = true;
+                            squares[index].Passable = true;
+                        }
+                        else if (p.State == SensorState.Boundary && squares[index].Destination == false)
+                            squares[index].Passable = false;
+                    }
+                });
+
+            while (!result.IsCompleted)
+                Thread.Sleep(1);
         }
 
         public void CycleAgents()
@@ -111,7 +155,7 @@ namespace MultiAgentLibrary
             while (!result.IsCompleted)
                 Thread.Sleep(1);
 
-            result = Parallel.ForEach(this.SelectMany(row => row.Where(square => square.PheremoneLevel > 1 && square.Destination == false)),
+            result = Parallel.ForEach(squares.Where(square => square.PheremoneLevel > 1 && square.Destination == false),
                 square =>
                 {
                     square.PheremoneLevel -= FieldSquare.PheremoneDecayRate;

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Drawing;
 
 namespace MultiAgentLibrary
@@ -37,29 +36,39 @@ namespace MultiAgentLibrary
             var x = Position.X;
             var y = Position.Y;
 
-            if (x == 0 || x == field.First().Count - 1 || x == 0 || x == field.Count - 1)
+            if (x == 0 || x == field.Width - 1 || y == 0 || y == field.Height - 1)
             {
                 Position = startPosition;
                 Console.WriteLine("Agent got itself stuck!");
                 pastRoute.Clear();
             }
 
-            var currentSquare = field[y][x];
-            var upSquare = field[y - 1][x];
-            var downSquare = field[y + 1][x];
-            var leftSquare = field[y][x - 1];
-            var rightSquare = field[y][x + 1];
+            var currentIndex = x + y * field.Width;
+
+            var currentSquare = field.Squares[currentIndex];
+            var upSquare = field.Squares[currentIndex - field.Width];
+            var downSquare = field.Squares[currentIndex + field.Width];
+            var leftSquare = field.Squares[currentIndex - 1];
+            var rightSquare = field.Squares[currentIndex + 1];
 
             if (currentSquare.Destination)
             {
                 var sizeScale = (1000 / pastRoute.Count) * 0.1;
-                foreach (var p in pastRoute)
+                lock (field)
                 {
-                    lock (field)
+                    foreach (var p in pastRoute)
                     {
-                        field[p.Y][p.X].PheremoneLevel += (uint)(FieldSquare.SuccessPheremoneLevel * sizeScale);
+
+                        field.Squares[p.X + field.Width * p.Y].PheremoneLevel += (uint)(FieldSquare.SuccessPheremoneLevel * sizeScale);
+                    }
+
+                    if (pastRoute.Count < field.ShortestRoute.Count || field.ShortestRoute.Count == 0)
+                    {
+                        field.ShortestRoute.Clear();
+                        field.ShortestRoute.AddRange(pastRoute);
                     }
                 }
+
                 Position = startPosition;
                 Console.WriteLine("Agent Route Length : {0}", pastRoute.Count);
                 pastRoute.Clear();

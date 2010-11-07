@@ -1,6 +1,5 @@
 ﻿namespace MultiAgentLibrary
 {
-    using System.Windows;
     using System.Drawing;
 
     public struct SensorReading

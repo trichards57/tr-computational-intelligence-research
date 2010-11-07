@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using MultiAgentLibrary;
-using System.IO;
-using System.Reflection;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using MultiAgentLibrary;
 
 namespace MultiAgentConsole
 {
+    using System.Collections.Generic;
+
     class Program
     {
         static int Main(string[] args)
@@ -99,16 +99,17 @@ namespace MultiAgentConsole
                     Console.WriteLine("Adding agent...");
                 }
                 field.CycleAgents();
+                
                 Console.WriteLine("Cycle : {0}", i);
-
+#if MOVIE
                 if (i % 10 == 0)
                 {
                 var oImage = new System.Drawing.Bitmap(mapWidth * 10, mapHeight * 10);
                 using (var graphics = System.Drawing.Graphics.FromImage(oImage))
                 {
-                    foreach (var square in field.SelectMany(r => r))
+                    foreach (var square in field.Squares)
                     {
-                        var col = System.Drawing.Color.FromArgb(square.SquareColor.A, square.SquareColor.R, square.SquareColor.G, square.SquareColor.B);
+                        var col = square.SquareColor;
                         graphics.FillRectangle(new SolidBrush(col), (int)square.Position.X * 10, (int)square.Position.Y * 10, 10, 10);
                     }
                     foreach (var agent in field.AgentsList)
@@ -120,30 +121,44 @@ namespace MultiAgentConsole
                 oImage.Save(string.Format(@".\Frames\output{0:00000000}.gif", i), ImageFormat.Gif);
                 oImage.Dispose();
                 }
+#endif
             }
 
             Console.WriteLine("Simulation stopped.");
-            Console.WriteLine("");
+            Console.WriteLine();
 
             Console.WriteLine("Outputing final state image.");
 
-            var outputImage = new System.Drawing.Bitmap(mapWidth * 10, mapHeight * 10);
-            using (var graphics = System.Drawing.Graphics.FromImage(outputImage))
+            var outputImage = new Bitmap(mapWidth * 10, mapHeight * 10);
+            using (var graphics = Graphics.FromImage(outputImage))
             {
-                foreach (var square in field.SelectMany(r => r))
+
+                foreach (var square in field.Squares)
                 {
-                    var col = System.Drawing.Color.FromArgb(square.SquareColor.A, square.SquareColor.R, square.SquareColor.G, square.SquareColor.B);
-                    graphics.FillRectangle(new SolidBrush(col), (int)square.Position.X * 10, (int)square.Position.Y * 10, 10, 10);
+                    var col = square.SquareColor;
+                    graphics.FillRectangle(new SolidBrush(col), square.Position.X * 10, square.Position.Y * 10, 10, 10);
+                }                
+                foreach (var point in field.OriginalRoute)
+                {
+                    graphics.FillRectangle(Brushes.Magenta, point.X * 10 + 5, point.Y * 10 + 5, 5, 5);
                 }
-                foreach (var agent in field.AgentsList)
+                foreach (var point in field.ShortestRoute)
                 {
-                    graphics.FillEllipse(Brushes.Yellow, (int)agent.Position.X * 10, (int)agent.Position.Y * 10, 10, 10);
+                    graphics.FillEllipse(Brushes.Yellow, point.X * 10 + 2.5f, point.Y * 10 + 2.5f, 5.0f, 5.0f);
                 }
             }
 
             outputImage.Save("output.gif", ImageFormat.Gif);
 
             Console.WriteLine("Image written.");
+            Console.WriteLine("Writing route data file.");
+            using (var file = new StreamWriter(File.OpenWrite("route.csv")))
+            {
+                foreach (var p in field.ShortestRoute)
+                {
+                    file.WriteLine("{0},{1}", p.X * field.SquareSize.Width, p.Y * field.SquareSize.Height);
+                }
+            }
             Console.WriteLine("Finished...");
 
             Console.ReadLine();
