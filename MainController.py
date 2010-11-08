@@ -1,3 +1,4 @@
+from Navigators import KeyboardCoordinateNavigator
 from Navigators import LongestDistanceNavigator
 from Painters import *
 from simulation import *
@@ -13,15 +14,15 @@ class MainController:
 
     def process(self, sensor, state, dt):
         if self.navigator == None:
-            self.navigator = LongestDistanceNavigator(state)
+            self.navigator = KeyboardCoordinateNavigator(state)
         if self.controller == None:
             self.controller = RuleController()
         if self.navigator != None:
             (targetX, targetY) = self.navigator.process(sensor, state, dt)
         for i in range(0,40):
             if sensor[i].val < 20:
-                targetX += -20*math.sin(sensor[i].ang)
-                targetY += -20*math.cos(sensor[i].ang)
+                targetX += -50*math.sin(sensor[i].ang)
+                targetY += -25*math.cos(sensor[i].ang)
                 
 
         state.targetX = targetX
