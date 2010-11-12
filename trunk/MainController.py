@@ -36,15 +36,19 @@ class MainController:
         if keyinput[pg.K_p]:
             self.controller = RuleController()
 
+        # Navigators
+        if keyinput[pg.K_a]:
+            self.navigator = RouteNavigator(state, 'routeNew.csv')
+
         # Run the navigator
         if self.navigator != None:
             (targetX, targetY) = self.navigator.process(sensor, state, dt)
 
         # Dodge walls
-        for i in range(0,40):
-            if sensor[i].val < 20:
-                targetX += -50*math.sin(sensor[i].ang)
-                targetY += -25*math.cos(sensor[i].ang)
+#        for i in range(0,40):
+#            if sensor[i].val < 20:
+#                targetX += -50*math.sin(sensor[i].ang)
+#                targetY += -25*math.cos(sensor[i].ang)
 
         # Set up variables
         state.targetX = targetX
