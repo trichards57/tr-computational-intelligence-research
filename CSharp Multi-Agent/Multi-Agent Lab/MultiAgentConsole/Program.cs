@@ -17,7 +17,7 @@ namespace MultiAgentConsole
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
             Console.WriteLine("Multi-Agent Lab Console : {0}", assemblyVersion.ToString(3));
             Console.WriteLine("#############################################################################\n");
-            if (args.Length < 1|| !File.Exists(args[0]))
+            if (args.Length < 1)
             {
                 WriteInstructions();
                 return 1;
