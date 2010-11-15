@@ -1,4 +1,5 @@
 from Painters import *
+from WallDodgers import *
 from simulation import *
 from Navigators import *
 from Controllers import *
@@ -11,6 +12,7 @@ class MainController:
         self.controller = None
         self.painter = None
         self.recorder = None
+        self.wallDodger = WallDodger(10)
 
     def process(self, sensor, state, dt):
         # Initialise modules.
@@ -23,12 +25,12 @@ class MainController:
 
         # Manage modules.
         # Recorders
+        if keyinput[pg.K_e]:
+            self.recorder = None
         if keyinput[pg.K_r]:
             self.recorder = RouteRecorder('routeData.csv')
         if keyinput[pg.K_t]:
             self.recorder = SensorRecorder('sensorData.csv')
-        if keyinput[pg.K_e]:
-            self.recorder = None
 
         # Controllers
         if keyinput[pg.K_o]:
@@ -39,21 +41,31 @@ class MainController:
         # Navigators
         if keyinput[pg.K_a]:
             self.navigator = RouteNavigator(state, 'routeNew.csv')
+        if keyinput[pg.K_s]:
+            self.navigator = KeyboardCoordinateNavigator(state)
+
+        # Wall Dodgers
+        if keyinput[pg.K_j]:
+            self.wallDodger = None
+        if keyinput[pg.K_k]:
+            self.wallDodger = WallDodger(10)
+        if keyinput[pg.K_l]:
+            self.wallDodger = WallDodger(20)
 
         # Run the navigator
         if self.navigator != None:
-            (targetX, targetY) = self.navigator.process(sensor, state, dt)
-
-        # Dodge walls
-#        for i in range(0,40):
-#            if sensor[i].val < 20:
-#                targetX += -50*math.sin(sensor[i].ang)
-#                targetY += -25*math.cos(sensor[i].ang)
+            (state.targetX, state.targetY) = self.navigator.process(sensor, state, dt)
 
         # Set up variables
-        state.targetX = targetX
-        state.targetY = targetY
         control = Control()
+
+        # Run the painter.
+        self.painter.targetX = state.targetX
+        self.painter.targetY = state.targetY
+
+        # Dodge walls
+        if self.wallDodger != None:
+            state = self.wallDodger.process(sensor, state, dt)
 
         # Run the recorder
         if self.recorder != None:
@@ -62,10 +74,6 @@ class MainController:
         # Run the controller.
         if self.controller != None:
             control = self.controller.process(sensor, state, dt)
-
-        # Run the painter.
-        self.painter.targetX = targetX
-        self.painter.targetY = targetY
 
         return control
 

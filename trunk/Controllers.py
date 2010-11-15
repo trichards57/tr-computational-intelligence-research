@@ -6,6 +6,25 @@ class RuleController:
         self.lastSideForce = 0
         self.targetAng = 0
 
+        self.bigYSpeed = 20
+        self.midYSpeed = 5
+        self.smlYSpeed = 2.5
+
+        self.bigXSpeed = 20
+        self.midXSpeed = 5
+        self.smlXSpeed = 2.5
+
+        self.bigXError = 50
+        self.midXError = 20
+
+        self.bigYError = 50
+        self.midYError = 20
+
+        self.upForce = 0.3
+        self.downForce = 0.1
+
+        self.propelAngle = 0.1
+
     def process(self, sensor, state, dt):
         control = Control()
 
@@ -18,32 +37,34 @@ class RuleController:
         if yError < 0:
             control.up = 0.5
 
-        if fabs(yError) > 100:
-            maxSpeed = 20
-        elif fabs(yError) > 40:
-            maxSpeed = 5
+        if fabs(yError) > self.bigYError:
+            maxSpeed = self.bigYSpeed
+        elif fabs(yError) > self.midYError:
+            maxSpeed = self.midYSpeed
         else:
-            maxSpeed = 2.5
+            maxSpeed = self.smlYSpeed
 
         if state.dydt < -maxSpeed:
-            control.up = 0.1
-        if state.dydt > maxSpeed:
-            control.up = 0.3
+            control.up = self.downForce
+        elif state.dydt > maxSpeed:
+            control.up = self.upForce
 
         if xError > 0:
-            self.targetAng = 0.1
+            self.targetAng = self.propelAngle
         elif xError < 0:
-            self.targetAng = -0.1
-        if fabs(xError) > 100:
-            maxSpeed = 20
-        elif fabs(xError) > 40:
-            maxSpeed = 5
+            self.targetAng = -self.propelAngle
+
+        if fabs(xError) > self.bigXError:
+            maxSpeed = self.bigXSpeed
+        elif fabs(xError) > self.midXError:
+            maxSpeed = self.midXSpeed
         else:
-            maxSpeed = 2.5
+            maxSpeed = self.smlXSpeed
+        
         if state.dxdt > maxSpeed:
-            self.targetAng = -0.1
+            self.targetAng = -self.propelAngle
         if state.dxdt < -maxSpeed:
-            self.targetAng = 0.1
+            self.targetAng = self.propelAngle
 
         angError = self.targetAng - normAng
 
