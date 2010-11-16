@@ -33,7 +33,7 @@ namespace CSharpSim.Classes
         {
             var points = Utilities.ReadPoints(data);
 
-            for (var i = 0; i + 1 < points.Count; i += 2)
+            for (var i = 0; i + 1 < points.Count; i += 1)
             {
                 Segments.Add(new WallSegment { Point1 = points[i], Point2 = points[i + 1] });
             }
