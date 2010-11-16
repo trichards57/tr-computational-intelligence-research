@@ -55,6 +55,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Classes\Brain.cs" />
     <Compile Include="Classes\Control.cs" />
     <Compile Include="Classes\Pod.cs" />
     <Compile Include="Classes\Sensor.cs" />
