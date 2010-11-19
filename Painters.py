@@ -8,5 +8,5 @@ class TargetCoordinatePainter:
 
     def preDraw(self, screen):
         col = (255,255,255)
-        pygame.draw.line(screen, col, (self.targetX - 10, self.targetY), (self.targetX + 10, self.targetY))
-        pygame.draw.line(screen, col, (self.targetX, self.targetY - 10), (self.targetX, self.targetY + 10))
+        pygame.draw.line(screen, col, (self.targetX - 10, self.targetY), (self.targetX + 10, self.targetY), 3)
+        pygame.draw.line(screen, col, (self.targetX, self.targetY - 10), (self.targetX, self.targetY + 10), 3)
