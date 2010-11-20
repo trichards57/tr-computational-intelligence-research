@@ -9,12 +9,15 @@ namespace GeneticControllerOptimiser
 
     class Program
     {
-        const int GenomeCount = 1000;
+        private const int GenomeCount = 1000;
         private const double TargetAngle = Math.PI / 4;
+        private const double MinusTargetAngle = -TargetAngle;
         private const double TargetY = 20;
         private const double TargetX = 20;
-        const double MutationRate = 0.75;
-        static readonly Random Rand = new Random();
+        private const double MinusTargetY = -TargetY;
+        private const double MinusTargetX = -TargetX;
+        private const double MutationRate = 0.75;
+        private static readonly Random Rand = new Random();
 
         static void Main()
         {
@@ -44,7 +47,7 @@ namespace GeneticControllerOptimiser
                     {
                         var systemState = new SystemState();
                         var result = new List<SystemState> { systemState };
-                        for (var i = 0; i < 1000; i++)
+                        for (var i = 0; i < 500; i++)
                         {
                             var thrusterState = p.Controller.Process(systemState, 0, 0, Math.PI - TargetAngle);
                             systemState = p.System.Process(thrusterState);
@@ -99,7 +102,7 @@ namespace GeneticControllerOptimiser
                 {
                     var systemState = new SystemState();
                     var result = new List<SystemState> { systemState };
-                    for (var i = 0; i < 1000; i++)
+                    for (var i = 0; i < 500; i++)
                     {
                         var thrusterState = p.Controller.Process(systemState, 0, TargetY, Math.PI);
                         systemState = p.System.Process(thrusterState);
@@ -174,7 +177,7 @@ namespace GeneticControllerOptimiser
             }
             else
             {
-                var speed = results.Count - results.IndexOf(results.First(s =>
+                var speed = 1000 - results.IndexOf(results.First(s =>
                 {
                     var currentIndex = results.IndexOf(s);
                     return results.Skip(currentIndex + 1).All(r => r.Angle > targetAngle * 0.99 && r.Angle < targetAngle * 1.01);
@@ -211,7 +214,7 @@ namespace GeneticControllerOptimiser
             }
             else
             {
-                var speed = results.Count - results.IndexOf(results.First(s =>
+                var speed = 1000 - results.IndexOf(results.First(s =>
                 {
                     var currentIndex = results.IndexOf(s);
                     return results.Skip(currentIndex + 1).All(r => r.Y > targetY * 0.99 && r.Y < targetY * 1.01);
