@@ -7,6 +7,8 @@ using System.IO;
 
 namespace CSharpSim
 {
+    using System.Windows.Media;
+
     struct IntersectResult
     {
         public double s;
@@ -48,19 +50,32 @@ namespace CSharpSim
             }
         }
 
-        public static IntersectResult Intersect(Point p0, Point p1, Point p2, Point p3)
+        public static Point Intersect(Point p0, Point p1, Point p2, Point p3)
         {
-            var line1 = p1 - p0;
-            var line2 = p3 - p2;
+            var line1 = new LineGeometry(p0, p1).GetWidenedPathGeometry(new Pen(Brushes.Black, 1.0));
+            var line2 = new LineGeometry(p2, p3).GetWidenedPathGeometry(new Pen(Brushes.Black, 1.0));
 
-            var fact = (-line2.X * line1.Y + line1.X * line2.Y);
+            var result = new CombinedGeometry(GeometryCombineMode.Intersect, line1, line2);
+            var flatGeo = result.GetFlattenedPathGeometry();
 
-
-            return new IntersectResult
+            if (flatGeo.Figures.Count > 0)
             {
-                s = (-line1.Y * (p0.X - p2.X) + line1.X * (p0.Y - p2.Y)) / fact,
-                t = (-line2.X * (p0.Y - p2.Y) - line2.Y * (p0.X - p2.X)) / fact
-            };
+                var fig = new PathGeometry(new[] { flatGeo.Figures[0] }).Bounds;
+                var res = new Point(fig.Left + fig.Width / 2, fig.Top + fig.Height / 2);
+                return res;
+            }
+
+            //var line1 = p1 - p0;
+            //var line2 = p3 - p2;
+
+            //var ua = (line2.X * line1.X - line2.Y * line1.Y) / (line2.Y * line1.X - line2.X * line1.Y);
+
+            //var res = p0 + ua * line1;
+            
+
+            //if (res.X >= Math.Min(p1.X, p2.X) && res.X <= Math.Max(p1.X, p2.X))
+            //    return res;
+            return new Point(double.PositiveInfinity, double.PositiveInfinity);
         }
     }
 }

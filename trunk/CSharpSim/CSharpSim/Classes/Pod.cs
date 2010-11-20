@@ -48,9 +48,31 @@ namespace CSharpSim.Classes
 
         public Color Color { get; set; }
 
-        public double X { get; set; }
+        public Point Location { get; set; }
 
-        public double Y { get; set; }
+        public double X
+        {
+            get
+            {
+                return Location.X;
+            }
+            set
+            {
+                Location = new Point(value, Location.Y);
+            }
+        }
+
+        public double Y
+        {
+            get
+            {
+                return Location.Y;
+            }
+            set
+            {
+                Location = new Point(Location.X, value);
+            }
+        }
 
         public double DxDt { get; set; }
 
@@ -73,20 +95,6 @@ namespace CSharpSim.Classes
         internal void Step(double dt, World world)
         {
             throw new NotImplementedException();
-        }
-
-        internal void UpdateSensors(World world)
-        {
-            foreach (var s in Sensors)
-            {
-                s.Angle = s.ReferenceAngle + Angle;
-                var res = world.FindClosestIntersect(new Point(X, Y), new Point(X + s.Range * Math.Sin(Angle), Y + s.Range * Math.Cos(Angle)));
-                s.Value = res.TMin * s.Range;
-                if (res.WallMin == null)
-                    s.Wall = null;
-                else
-                    s.Wall = res.WallMin.Name;
-            }
         }
 
         internal void Draw(System.Windows.Controls.Canvas canvas)

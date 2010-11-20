@@ -1,130 +1,137 @@
-from simulation import *
 import math
+
+from simulation import Control
 
 class RuleController:
     def __init__(self):
-        self.lastSideForce = 0
-        self.targetAng = 0
+        self.last_side_force = 0
+        self.target_ang = 0
 
-        self.bigYSpeed = 20
-        self.midYSpeed = 5
-        self.smlYSpeed = 2.5
+        self.big_y_speed = 20
+        self.mid_y_speed = 5
+        self.sml_y_speed = 2.5
 
-        self.bigXSpeed = 20
-        self.midXSpeed = 5
-        self.smlXSpeed = 2.5
+        self.big_x_speed = 20
+        self.mid_x_speed = 5
+        self.sml_x_speed = 2.5
 
-        self.bigXError = 50
-        self.midXError = 20
+        self.big_x_error = 50
+        self.mid_x_error = 20
 
-        self.bigYError = 50
-        self.midYError = 20
+        self.big_y_error = 50
+        self.mid_y_error = 20
 
-        self.upForce = 0.3
-        self.downForce = 0.1
+        self.up_force = 0.3
+        self.down_force = 0.1
 
-        self.propelAngle = 0.1
+        self.propel_angle = 0.1
 
     def process(self, sensor, state, dt):
         control = Control()
 
-        yError = state.targetY - state.y
-        xError = state.targetX - state.x
-        normAng = (2 * pi) - ( (state.ang + pi) % (2 * pi))
-        if normAng > pi:
-            normAng -= 2*pi
+        y_error = state.target_y - state.y
+        x_error = state.target_x - state.x
+        norm_ang = (2 * math.pi) - ( (state.ang + math.pi) % (2 * math.pi))
+        if norm_ang > math.pi:
+            norm_ang -= 2* math.pi
 
-        if yError < 0:
+        if y_error < 0:
             control.up = 0.5
 
-        if fabs(yError) > self.bigYError:
-            maxSpeed = self.bigYSpeed
-        elif fabs(yError) > self.midYError:
-            maxSpeed = self.midYSpeed
+        if math.fabs(y_error) > self.big_y_error:
+            max_speed = self.big_y_speed
+        elif math.fabs(y_error) > self.mid_y_error:
+            max_speed = self.mid_y_speed
         else:
-            maxSpeed = self.smlYSpeed
+            max_speed = self.sml_y_speed
 
-        if state.dydt < -maxSpeed:
-            control.up = self.downForce
-        elif state.dydt > maxSpeed:
-            control.up = self.upForce
+        if state.dydt < -max_speed:
+            control.up = self.down_force
+        elif state.dydt > max_speed:
+            control.up = self.up_force
 
-        if xError > 0:
-            self.targetAng = self.propelAngle
-        elif xError < 0:
-            self.targetAng = -self.propelAngle
+        if x_error > 0:
+            self.target_ang = self.propel_angle
+        elif x_error < 0:
+            self.target_ang = -self.propel_angle
 
-        if fabs(xError) > self.bigXError:
-            maxSpeed = self.bigXSpeed
-        elif fabs(xError) > self.midXError:
-            maxSpeed = self.midXSpeed
+        if math.fabs(x_error) > self.big_x_error:
+            max_speed = self.big_x_speed
+        elif math.fabs(x_error) > self.mid_x_error:
+            max_speed = self.mid_x_speed
         else:
-            maxSpeed = self.smlXSpeed
+            max_speed = self.sml_x_speed
         
-        if state.dxdt > maxSpeed:
-            self.targetAng = -self.propelAngle
-        if state.dxdt < -maxSpeed:
-            self.targetAng = self.propelAngle
+        if state.dxdt > max_speed:
+            self.target_ang = -self.propel_angle
+        if state.dxdt < -max_speed:
+            self.target_ang = self.propel_angle
 
-        angError = self.targetAng - normAng
+        ang_error = self.target_ang - norm_ang
 
-        sideForce = (angError * 6 + state.dangdt * 5)
+        side_force = (ang_error * 6 + state.dangdt * 5)
 
-        if sideForce > 0:
-            control.right = sideForce
+        if side_force > 0:
+            control.right = side_force
             control.left = 0
         else:
-            control.left = -sideForce
+            control.left = -side_force
             control.right = 0
 
-        self.lastSideForce = sideForce
+        self.last_side_force = side_force
 
         return control
 
 class PDController:
 
     def __init__(self):
-        self.verticalPropGain = 1
-        self.verticalDiffGain = -5
-        self.horizontalPropGain = 2
-        self.horizontalDiffGain = -18
-        self.angleGain = 0.1
-        self.anglePropGain = 20
-        self.angleDiffGain = -25
-        self.horizontalForceFeedbackScale = 20
+        self.vertical_prop_gain = 1
+        self.vertical_diff_gain = -5
+        self.horizontal_prop_gain = 2
+        self.horizontal_diff_gain = -18
+        self.angle_gain = 0.1
+        self.angle_prop_gain = 20
+        self.angle_diff_gain = -25
+        self.horizontal_force_feedback_scale = 20
 
-        self.firstCycle = True
+        self.first_cycle = True
 
         self.control = Control()
 
     def process(self, sensor, state, dt):
-        targetX = state.targetX
-        targetY = state.targetY
+        target_x = state.target_x
+        target_y = state.target_y
 
         # Vertical first:
-        self.control.up = (self.control.up - (self.verticalPropGain * (targetY - state.y) + self.verticalDiffGain * state.dydt))
+        self.control.up = (self.control.up - (self.vertical_prop_gain * \
+            (target_y - state.y) + self.vertical_diff_gain * state.dydt))
 
         # Horizontal next:
-        horizFeedback = ((targetX - state.x) * self.horizontalPropGain + (self.horizontalDiffGain * state.dxdt)) / self.horizontalForceFeedbackScale
+        horiz_feedback = ((target_x - state.x) * self.horizontal_prop_gain \
+                            + (self.horizontal_diff_gain * state.dxdt)) \
+                         / self.horizontal_force_feedback_scale
 
         # Limit feedback so that asin never fails.
-        if horizFeedback > 1:
-            horizFeedback = 1
-        elif horizFeedback < -1:
-            horizFeedback = -1
+        if horiz_feedback > 1:
+            horiz_feedback = 1
+        elif horiz_feedback < -1:
+            horiz_feedback = -1
 
         # This feedback leads to a control angle
-        angleChange = math.pi - (self.angleGain * math.asin(horizFeedback)) - state.ang
+        angle_change = math.pi - (self.angle_gain * math.asin(horiz_feedback)) \
+            - state.ang
 
         # Now the angle control
-        horizForce = (self.control.left - self.control.right) + (angleChange * self.anglePropGain + (self.angleDiffGain * state.dangdt))
+        horiz_force = (self.control.left - self.control.right) + \
+            (angle_change * self.angle_prop_gain + \
+                (self.angle_diff_gain * state.dangdt))
 
-        if horizForce > 0:
-            self.control.left = horizForce
+        if horiz_force > 0:
+            self.control.left = horiz_force
             self.control.right = 0
         else:
             self.control.left = 0
-            self.control.right = abs(horizForce)
+            self.control.right = abs(horiz_force)
 
         self.control.limit()
 
