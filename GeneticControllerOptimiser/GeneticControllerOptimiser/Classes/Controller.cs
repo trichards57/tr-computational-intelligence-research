@@ -36,19 +36,20 @@ namespace GeneticControllerOptimiser.Classes
                 throw new ArgumentException("Genome is not the right length.", "genome");
             return new Controller
             {
-                BigYSpeed = genome[0],
-                MidYSpeed = genome[1],
-                SmlYSpeed = genome[2],
-                BigXSpeed = genome[3],
-                MidXSpeed = genome[4],
-                SmlXSpeed = genome[5],
-                BigXError = genome[6],
-                MidXError = genome[7],
-                BigYError = genome[8],
-                MidYError = genome[9],
-                UpForce = genome[10],
-                DownForce = genome[11],
-                PropelAngle = genome[12],
+                
+                BigXSpeed = genome[0],
+                MidXSpeed = genome[1],
+                SmlXSpeed = genome[2],
+                BigXError = genome[3],
+                MidXError = genome[4],
+                PropelAngle = genome[5],
+                BigYSpeed = genome[6],
+                MidYSpeed = genome[7],
+                SmlYSpeed = genome[8],
+                BigYError = genome[9],
+                MidYError = genome[10],
+                UpForce = genome[11],
+                DownForce = genome[12],
                 AngleProportionalGain = genome[13],
                 AngleDifferentialGain = genome[14],
                 AngleIntegralGain = genome[15]

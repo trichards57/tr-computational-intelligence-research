@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeneticControllerOptimiser", "GeneticControllerOptimiser\GeneticControllerOptimiser.csproj", "{4B61092B-7A87-45FE-A727-D1BA86EEC0B6}"
 EndProject
 Global
