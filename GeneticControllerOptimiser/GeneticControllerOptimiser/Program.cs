@@ -26,7 +26,7 @@ namespace GeneticControllerOptimiser
             var range = ParallelEnumerable.Range(0, GenomeCount);
 
             var list = range.Select(i =>
-                { 
+                {
                     var ret = new List<double>();
                     for (var j = 0; j < 16; j++)
                     {
@@ -40,7 +40,7 @@ namespace GeneticControllerOptimiser
             int fitness;
 
             IList<double> topGenome;
-            
+
             do
             {
                 var results = population.Select(p =>
@@ -62,11 +62,13 @@ namespace GeneticControllerOptimiser
                 var topThreeQuarterGenomes = results.Take(3 * GenomeCount / 4).Select(p => p.Genome).ToList();
                 var topQuarterGenomes = topThreeQuarterGenomes.Take(GenomeCount / 4);
 
-                var children = from pair in (from g in topQuarterGenomes
-                                             select new {
-                                                 Parent1 = g,
-                                                 Parent2 = topThreeQuarterGenomes[Rand.Next(0, topThreeQuarterGenomes.Count)]
-                                             })
+                var children = from pair in
+                                   (from g in topQuarterGenomes
+                                    select new
+                                    {
+                                        Parent1 = g,
+                                        Parent2 = topThreeQuarterGenomes[Rand.Next(0, topThreeQuarterGenomes.Count)]
+                                    })
                                select Breed(pair.Parent1, pair.Parent2);
                 list = topThreeQuarterGenomes.Union(children).ToList().AsParallel().AsOrdered();
 
@@ -90,7 +92,7 @@ namespace GeneticControllerOptimiser
                 }
 
                 ret.AddRange(bestAngleGenes);
-                
+
                 return ret;
             });
 
@@ -101,18 +103,34 @@ namespace GeneticControllerOptimiser
                 var results = population.Select(p =>
                 {
                     var systemState = new SystemState();
+                    var negSystemState = new SystemState();
                     var result = new List<SystemState> { systemState };
+                    var negResults = new List<SystemState> { negSystemState };
                     for (var i = 0; i < 500; i++)
                     {
                         var thrusterState = p.Controller.Process(systemState, 0, TargetY, Math.PI);
+                        var negThrustState = p.NegativeController.Process(negSystemState, 0, MinusTargetY, Math.PI);
                         systemState = p.System.Process(thrusterState);
+                        negSystemState = p.NegativeSystem.Process(negThrustState);
                         result.Add(systemState);
+                        negResults.Add(negSystemState);
                     }
-                    return new { ResultData = result, p.Controller, p.System, Fitness = VerticalFitnessCalculator(result, TargetY), p.Genome };
-                }).OrderByDescending(r => r.Fitness).ToList();
+                    return new
+                    {
+                        NegativeResult = negResults,
+                        p.NegativeController,
+                        p.NegativeSystem,
+                        ResultData = result,
+                        p.Controller,
+                        p.System,
+                        PositiveFitness = VerticalFitnessCalculator(result, TargetY),
+                        NegativeFitness = VerticalFitnessCalculator(negResults, MinusTargetY),
+                        p.Genome
+                    };
+                }).OrderByDescending(r => (r.PositiveFitness + r.NegativeFitness) / 2).ToList();
 
-                Console.WriteLine("Top Fitness     : {0}", results.Max(a => a.Fitness));
-                Console.WriteLine("Average Fitness : {0}", results.Average(a => a.Fitness));
+                Console.WriteLine("Top Fitness     : {0}", results.Max(r => (r.PositiveFitness + r.NegativeFitness) / 2));
+                Console.WriteLine("Average Fitness : {0}", results.Average(r => (r.PositiveFitness + r.NegativeFitness) / 2));
 
                 var topThreeQuarterGenomes = results.Take(3 * GenomeCount / 4).Select(p => p.Genome).ToList();
                 var topQuarterGenomes = topThreeQuarterGenomes.Take(GenomeCount / 4);
@@ -129,11 +147,14 @@ namespace GeneticControllerOptimiser
 
                 Parallel.ForEach(list.Skip(GenomeCount / 4).Where(g => MultiRandom.NextDouble() < MutationRate), g => MutateYControl(g));
 
-                fitness = results.First().Fitness;
+                fitness =  (results.First().NegativeFitness + results.First().PositiveFitness) / 2;
                 topGenome = results.First().Genome;
 
                 var bestResult = results.First().ResultData.Select(r => r.Y);
                 var bestResultString = string.Join(",", bestResult);
+
+                var negBestResult = results.First().NegativeResult.Select(r => r.Y);
+                var negBestResultString = string.Join(",", negBestResult);
 
                 population = CreatePopulation(list);
 
@@ -142,7 +163,7 @@ namespace GeneticControllerOptimiser
 
         private static ParallelQuery<PopulationMember> CreatePopulation(IEnumerable<List<double>> genomeList, bool disableGravity = true)
         {
-            return genomeList.AsParallel().AsOrdered().Select(g => new PopulationMember { Genome = g, Controller = Controller.FromGenome(g.ToArray()), System = new Classes.System { DisableGravity = disableGravity } });
+            return genomeList.AsParallel().AsOrdered().Select(g => new PopulationMember { Genome = g, Controller = Controller.FromGenome(g.ToArray()), System = new Classes.System { DisableGravity = disableGravity }, NegativeController = Controller.FromGenome(g.ToArray()), NegativeSystem = new Classes.System { DisableGravity = disableGravity } });
         }
 
         /// <summary>
@@ -192,22 +213,25 @@ namespace GeneticControllerOptimiser
         {
             int fitness;
 
-            if (Math.Sign(results[2].Y) != Math.Sign(targetY))
+            var data = targetY < 0 ? results.Select(r => -r.Y).ToList() : results.Select(r => r.Y).ToList();
+            targetY = Math.Abs(targetY);
+
+            if (Math.Sign(data[2]) != Math.Sign(targetY))
             {
                 // Immediatly started heading the wrong way.  No good at all.
                 fitness = 0;
             }
-            else if (results.Min(s => s.Y) < 0)
+            else if (data.Min() < 0)
             {
                 // Must be unstable as it oscillates the wrong way.
                 fitness = 0;
             }
-            else if (results.Max(s => s.Y) < targetY * 0.99)
+            else if (data.Max() < targetY * 0.99)
             {
                 // Does not reach the target y (1% error allowed).
                 fitness = 10;
             }
-            else if (results.Max(s => s.Y) > targetY * 1.18)
+            else if (data.Max() > targetY * 1.18)
             {
                 // Overshoots too far.  Not very good. (18% error allowed.)
                 fitness = 20;
@@ -217,7 +241,7 @@ namespace GeneticControllerOptimiser
                 var speed = 1000 - results.IndexOf(results.First(s =>
                 {
                     var currentIndex = results.IndexOf(s);
-                    return results.Skip(currentIndex + 1).All(r => r.Y > targetY * 0.99 && r.Y < targetY * 1.01);
+                    return data.Skip(currentIndex + 1).All(r => r > targetY * 0.99 && r < targetY * 1.01);
                 }));
                 fitness = speed;
             }
@@ -256,10 +280,12 @@ namespace GeneticControllerOptimiser
 
         public static List<double> MutateYControl(List<double> item)
         {
-            var index = MultiRandom.Next(6, 13);
-
-            item[index] = MultiRandom.NextDouble() * 100 - 50;
-
+            for (var i = 6; i < 13; i++)
+            {
+                if (MultiRandom.NextDouble() < MutationRate)
+                    item[i] = MultiRandom.NextDouble() * 100 - 50;
+            }
+            
             return item;
         }
     }
