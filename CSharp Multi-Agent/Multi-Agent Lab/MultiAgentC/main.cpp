@@ -75,21 +75,21 @@ int main(int argc, char** argv) {
 
         if (parts.size() == 2)
         {
-            if (parts[0] == "w")
+            if (parts[0] == "/w")
                 mapWidth = atoi(parts[1].c_str());
-            else if (parts[0] == "h")
+            else if (parts[0] == "/h")
                 mapHeight = atoi(parts[1].c_str());
-            else if (parts[0] == "ma")
+            else if (parts[0] == "/ma")
                 maxAgents = atoi(parts[1].c_str());
-            else if (parts[0] == "sa")
+            else if (parts[0] == "/sa")
                 startAgents = atoi(parts[1].c_str());
-            else if (parts[0] == "c")
+            else if (parts[0] == "/c")
                 cycleCount = atoi(parts[1].c_str());
             else
-                cout << "Unknown argument : /" << parts[0] << endl;
+                cout << "Unknown argument : " << parts[0] << endl;
         }
         else
-            cout << "Invalid argument : /" << parts[0] << endl;
+            cout << "Invalid argument : " << parts[0] << endl;
     }
 
     cout << "Data File       : " << fileName << endl
