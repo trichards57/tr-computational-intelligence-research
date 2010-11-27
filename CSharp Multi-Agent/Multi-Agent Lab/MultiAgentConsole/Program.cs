@@ -8,8 +8,6 @@ using MultiAgentLibrary;
 
 namespace MultiAgentConsole
 {
-    using System.Collections.Generic;
-
     class Program
     {
         static int Main(string[] args)
