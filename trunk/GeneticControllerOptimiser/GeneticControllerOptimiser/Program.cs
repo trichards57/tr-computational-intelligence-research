@@ -96,7 +96,7 @@ namespace GeneticControllerOptimiser
                 return ret;
             });
 
-            population = CreatePopulation(list, false);
+            population = CreatePopulation(list, false, Math.PI);
 
             do
             {
@@ -156,14 +156,144 @@ namespace GeneticControllerOptimiser
                 var negBestResult = results.First().NegativeResult.Select(r => r.Y);
                 var negBestResultString = string.Join(",", negBestResult);
 
-                population = CreatePopulation(list);
+                population = CreatePopulation(list, false, Math.PI);
+
+            } while (!Console.KeyAvailable && fitness < 900);
+
+            var bestYGenes = topGenome.Skip(6).Take(7);
+
+            list = range.Select(i =>
+            {
+                var ret = new List<double>();
+                for (var j = 0; j < 6; j++)
+                {
+                    ret.Add(MultiRandom.NextDouble() * 100 - 50);
+                }
+                ret.AddRange(bestYGenes);
+                ret.AddRange(bestAngleGenes);
+
+                return ret; 
+            });
+
+            population = CreatePopulation(list, false, Math.PI);
+
+            do
+            {
+                var results = population.Select(p =>
+                {
+                    var systemState = new SystemState();
+                    var negSystemState = new SystemState();
+                    var result = new List<SystemState> { systemState };
+                    var negResults = new List<SystemState> { negSystemState };
+                    for (var i = 0; i < 1000; i++)
+                    {
+                        var thrusterState = p.Controller.Process(systemState, TargetX, 0, Math.PI);
+                        var negThrustState = p.NegativeController.Process(negSystemState, MinusTargetX, 0, Math.PI);
+                        systemState = p.System.Process(thrusterState);
+                        negSystemState = p.NegativeSystem.Process(negThrustState);
+                        result.Add(systemState);
+                        negResults.Add(negSystemState);
+                    }
+                    return new
+                    {
+                        NegativeResult = negResults,
+                        p.NegativeController,
+                        p.NegativeSystem,
+                        ResultData = result,
+                        p.Controller,
+                        p.System,
+                        PositiveFitness = HorizontalFitnessCalculator(result, TargetX),
+                        NegativeFitness = HorizontalFitnessCalculator(negResults, MinusTargetX),
+                        p.Genome
+                    };
+                }).OrderByDescending(r => (r.PositiveFitness + r.NegativeFitness) / 2).ToList();
+
+                Console.WriteLine("Top Fitness     : {0}", results.Max(r => (r.PositiveFitness + r.NegativeFitness) / 2));
+                Console.WriteLine("Average Fitness : {0}", results.Average(r => (r.PositiveFitness + r.NegativeFitness) / 2));
+
+                var topThreeQuarterGenomes = results.Take(3 * GenomeCount / 4).Select(p => p.Genome).ToList();
+                var topQuarterGenomes = topThreeQuarterGenomes.Take(GenomeCount / 4);
+
+                var children = from pair in
+                                   (from g in topQuarterGenomes
+                                    select new
+                                    {
+                                        Parent1 = g,
+                                        Parent2 = topThreeQuarterGenomes[Rand.Next(0, topThreeQuarterGenomes.Count)]
+                                    })
+                               select Breed(pair.Parent1, pair.Parent2);
+                list = topThreeQuarterGenomes.Union(children).ToList().AsParallel().AsOrdered();
+
+                Parallel.ForEach(list.Skip(GenomeCount / 4).Where(g => MultiRandom.NextDouble() < MutationRate), g => MutateXControl(g));
+
+                fitness = (results.First().NegativeFitness + results.First().PositiveFitness) / 2;
+                topGenome = results.First().Genome;
+
+                var bestResult = results.First().ResultData.Select(r => r.X);
+                var bestResultString = string.Join(",", bestResult);
+
+                var negBestResult = results.First().NegativeResult.Select(r => r.X);
+                var negBestResultString = string.Join(",", negBestResult);
+
+                population = CreatePopulation(list, false, Math.PI);
 
             } while (!Console.KeyAvailable);
         }
 
-        private static ParallelQuery<PopulationMember> CreatePopulation(IEnumerable<List<double>> genomeList, bool disableGravity = true)
+        private static object MutateXControl(IList<double> item)
         {
-            return genomeList.AsParallel().AsOrdered().Select(g => new PopulationMember { Genome = g, Controller = Controller.FromGenome(g.ToArray()), System = new Classes.System { DisableGravity = disableGravity }, NegativeController = Controller.FromGenome(g.ToArray()), NegativeSystem = new Classes.System { DisableGravity = disableGravity } });
+            for (var i = 0; i < 6; i++)
+            {
+                if (MultiRandom.NextDouble() < MutationRate)
+                    item[i] = MultiRandom.NextDouble() * 100 - 50;
+            }
+
+            return item;
+        }
+
+        private static int HorizontalFitnessCalculator(IList<SystemState> results, double targetX)
+        {
+            int fitness;
+
+            var data = targetX < 0 ? results.Select(r => -r.X).ToList() : results.Select(r => r.X).ToList();
+            targetX = Math.Abs(targetX);
+
+            if (Math.Sign(data.First(d => d != 0)) != Math.Sign(targetX))
+            {
+                // Immediatly started heading the wrong way.  No good at all.
+                fitness = 0;
+            }
+            else if (data.Min() < 0)
+            {
+                // Must be unstable as it oscillates the wrong way.
+                fitness = 0;
+            }
+            else if (data.Max() < targetX * 0.95)
+            {
+                // Does not reach the target y (5% error allowed).
+                fitness = 10;
+            }
+            else if (data.Max() > targetX * 1.18)
+            {
+                // Overshoots too far.  Not very good. (18% error allowed.)
+                fitness = 20;
+            }
+            else
+            {
+                var speed = 1000 - results.IndexOf(results.First(s =>
+                {
+                    var currentIndex = results.IndexOf(s);
+                    return data.Skip(currentIndex + 1).All(r => r > targetX * 0.95 && r < targetX * 1.05);
+                }));
+                fitness = speed;
+            }
+
+            return fitness;
+        }
+
+        private static ParallelQuery<PopulationMember> CreatePopulation(IEnumerable<List<double>> genomeList, bool disableGravity = true, double initialAngle = 0.0)
+        {
+            return genomeList.AsParallel().AsOrdered().Select(g => new PopulationMember { Genome = g, Controller = Controller.FromGenome(g.ToArray()), System = new Classes.System { DisableGravity = disableGravity, Angle = initialAngle }, NegativeController = Controller.FromGenome(g.ToArray()), NegativeSystem = new Classes.System { DisableGravity = disableGravity, Angle = initialAngle } });
         }
 
         /// <summary>
@@ -226,9 +356,9 @@ namespace GeneticControllerOptimiser
                 // Must be unstable as it oscillates the wrong way.
                 fitness = 0;
             }
-            else if (data.Max() < targetY * 0.99)
+            else if (data.Max() < targetY * 0.95)
             {
-                // Does not reach the target y (1% error allowed).
+                // Does not reach the target y (5% error allowed).
                 fitness = 10;
             }
             else if (data.Max() > targetY * 1.18)
@@ -241,7 +371,7 @@ namespace GeneticControllerOptimiser
                 var speed = 1000 - results.IndexOf(results.First(s =>
                 {
                     var currentIndex = results.IndexOf(s);
-                    return data.Skip(currentIndex + 1).All(r => r > targetY * 0.99 && r < targetY * 1.01);
+                    return data.Skip(currentIndex + 1).All(r => r > targetY * 0.95 && r < targetY * 1.05);
                 }));
                 fitness = speed;
             }

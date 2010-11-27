@@ -36,20 +36,20 @@ namespace GeneticControllerOptimiser.Classes
                 throw new ArgumentException("Genome is not the right length.", "genome");
             return new Controller
             {
-                
-                BigXSpeed = genome[0],
-                MidXSpeed = genome[1],
-                SmlXSpeed = genome[2],
-                BigXError = genome[3],
-                MidXError = genome[4],
-                PropelAngle = genome[5],
-                BigYSpeed = genome[6],
-                MidYSpeed = genome[7],
-                SmlYSpeed = genome[8],
-                BigYError = genome[9],
-                MidYError = genome[10],
-                UpForce = genome[11],
-                DownForce = genome[12],
+
+                BigXSpeed = genome[0] + 50, // Must be positive
+                MidXSpeed = genome[1] + 50, // Must be positive
+                SmlXSpeed = genome[2] + 50, // Must be positive
+                BigXError = genome[3] + 50, // Must be positive
+                MidXError = genome[4] + 50, // Must be positive
+                PropelAngle = (genome[5] + 50) / 50, // Must be positive and between 2 and -2
+                BigYSpeed = genome[6] + 50, // Must be positive
+                MidYSpeed = genome[7] + 50, // Must be positive
+                SmlYSpeed = genome[8] + 50, // Must be positive
+                BigYError = genome[9] + 50, // Must be positive
+                MidYError = genome[10] + 50, // Must be positive
+                UpForce = 0.4, // Set to save time
+                DownForce = 0.0, // Set to save time
                 AngleProportionalGain = genome[13],
                 AngleDifferentialGain = genome[14],
                 AngleIntegralGain = genome[15]
@@ -87,9 +87,9 @@ namespace GeneticControllerOptimiser.Classes
             else if (state.DyDt > maxSpeed)
                 control.Up = UpForce;
 
-            if (xError > 0)
+            if (xError > 1)
                 targetAngle = PropelAngle;
-            else if (xError < 0)
+            else if (xError < -1)
                 targetAngle = -PropelAngle;
 
             if (Math.Abs(xError) > BigXError)
