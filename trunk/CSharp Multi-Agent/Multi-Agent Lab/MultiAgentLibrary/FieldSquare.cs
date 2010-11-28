@@ -12,7 +12,7 @@ namespace MultiAgentLibrary
 
         public const uint MaxPheromoneLevel = uint.MaxValue;
 
-        private object lockObject = new object();
+        private readonly object lockObject = new object();
 
         public FieldSquare(Point position)
         {
