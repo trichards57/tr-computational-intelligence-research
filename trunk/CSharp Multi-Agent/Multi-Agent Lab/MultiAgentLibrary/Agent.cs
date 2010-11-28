@@ -20,13 +20,16 @@ namespace MultiAgentLibrary
 
         public bool FoundEnd { get; set; }
 
+        public int ShortTermMemoryLength { get; set; }
+
         private readonly List<Point> pastRoute = new List<Point>();
 
         private readonly Random rand = new Random();
 
-        public Agent(Point startPosition)
+        public Agent(Point startPosition, int memoryLength)
         {
             Position = startPosition;
+            ShortTermMemoryLength = memoryLength;
             this.startPosition = startPosition;
             FoundEnd = false;
         }
@@ -51,7 +54,7 @@ namespace MultiAgentLibrary
             var leftSquare = field.Squares[currentIndex - 1];
             var rightSquare = field.Squares[currentIndex + 1];
 
-            if (currentSquare.Destination)
+            if (currentSquare.Type == SquareType.Destination)
             {
                 var sizeScale = (1000 / pastRoute.Count) * 0.1;
                 lock (field)
@@ -75,20 +78,20 @@ namespace MultiAgentLibrary
             }
             else
             {
-                var lastFourSquare = pastRoute.Count > 3 ? pastRoute.GetRange(pastRoute.Count - 4, 4) : pastRoute;
+                var recentSquares = pastRoute.Count >= ShortTermMemoryLength ? pastRoute.GetRange(pastRoute.Count - ShortTermMemoryLength, ShortTermMemoryLength) : pastRoute;
                 var upBias = 1.0;
                 var downBias = 1.0;
                 var leftBias = 1.0;
                 var rightBias = 1.0;
 
                 // Trying to encourage movement away from the home.
-                if (lastFourSquare.Contains(upSquare.Position))
+                if (recentSquares.Contains(upSquare.Position))
                     upBias = 0.25;
-                if (lastFourSquare.Contains(downSquare.Position))
+                if (recentSquares.Contains(downSquare.Position))
                     downBias = 0.25;
-                if (lastFourSquare.Contains(leftSquare.Position))
+                if (recentSquares.Contains(leftSquare.Position))
                     leftBias = 0.25;
-                if (lastFourSquare.Contains(rightSquare.Position))
+                if (recentSquares.Contains(rightSquare.Position))
                     rightBias = 0.25;
 
                 var up = upSquare.PheremoneLevel * upBias;
