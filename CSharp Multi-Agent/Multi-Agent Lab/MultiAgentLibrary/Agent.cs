@@ -44,6 +44,9 @@ namespace MultiAgentLibrary
                 Position = startPosition;
                 Console.WriteLine("Agent got itself stuck!");
                 pastRoute.Clear();
+
+                x = Position.X;
+                y = Position.Y;
             }
 
             var currentIndex = x + y * field.Width;

@@ -9,6 +9,7 @@ using MultiAgentLibrary;
 namespace MultiAgentConsole
 {
     using System.Diagnostics;
+    using System.Collections.Generic;
 
     class Program
     {
@@ -155,12 +156,41 @@ namespace MultiAgentConsole
             outputImage.Save("output.gif", ImageFormat.Gif);
 
             Console.WriteLine("Image written.");
+
+            Console.WriteLine("Removing uneeded route points");
+            var scaledData = field.ShortestRoute.Select(p => new PointF(p.X * field.SquareSize.Width, p.Y * field.SquareSize.Height)).ToList();
+
+            var result = new List<PointF>();
+
+            for (var i = 0; i < scaledData.Count(); i++)
+            {
+                if (result.Count < 2)
+                    result.Add(scaledData[i]);
+                else
+                {
+                    var p1 = result[result.Count - 2];
+                    var p2 = result[result.Count - 1];
+
+                    var m = (p1.Y - p2.Y) / (p1.X - p2.X);
+                    var c = p1.Y - m * p1.X;
+
+                    if (float.IsInfinity(m) && scaledData[i].X == p1.X)
+                        result[result.Count - 1] = scaledData[i];
+                    else if (m == 0 && scaledData[i].Y == p1.Y)
+                        result[result.Count - 1] = scaledData[i];
+                    else if (m * scaledData[i].X + c == scaledData[i].Y)
+                        result[result.Count - 1] = scaledData[i];
+                    else
+                        result.Add(scaledData[i]);
+                }
+            }
+
             Console.WriteLine("Writing route data file.");
             using (var file = new StreamWriter(File.OpenWrite("route.csv")))
             {
-                foreach (var p in field.ShortestRoute)
+                foreach (var p in result)
                 {
-                    file.WriteLine("{0},{1}", p.X * field.SquareSize.Width, p.Y * field.SquareSize.Height);
+                    file.WriteLine("{0},{1}", p.X, p.Y);
                 }
             }
             Console.WriteLine("Finished...");

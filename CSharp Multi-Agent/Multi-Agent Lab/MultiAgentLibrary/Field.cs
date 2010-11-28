@@ -7,7 +7,7 @@ using System.Linq;
 namespace MultiAgentLibrary
 {
     using System.Drawing;
-    using System.Threading.Tasks;
+    using System.Threading;    using System.Threading.Tasks;
 
     public class Field
     {
