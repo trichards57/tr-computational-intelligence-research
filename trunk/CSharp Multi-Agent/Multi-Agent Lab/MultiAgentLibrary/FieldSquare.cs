@@ -56,6 +56,27 @@ namespace MultiAgentLibrary
             }
         }
 
-        public SquareType Type { get; set; }
+        private SquareType type;
+
+        public SquareType Type
+        {
+            get
+            {
+                return type;
+            }
+            set
+            {
+                type = value;
+                switch (type)
+                {
+                    case SquareType.Wall:
+                        PheremoneLevel = 0;
+                        break;
+                    case SquareType.Destination:
+                        PheremoneLevel = uint.MaxValue;
+                        break;
+                }
+            }
+        }
     }
 }
