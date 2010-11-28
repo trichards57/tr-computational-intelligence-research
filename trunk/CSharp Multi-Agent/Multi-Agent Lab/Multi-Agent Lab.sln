@@ -5,8 +5,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiAgentConsole", "MultiA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiAgentLibrary", "MultiAgentLibrary\MultiAgentLibrary.csproj", "{98FE0613-F8B6-4F36-B649-2CC3657432FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteOptimiser", "RouteOptimiser\RouteOptimiser.csproj", "{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,19 +43,6 @@ Global
 		{98FE0613-F8B6-4F36-B649-2CC3657432FF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{98FE0613-F8B6-4F36-B649-2CC3657432FF}.Release|Win32.ActiveCfg = Release|Any CPU
 		{98FE0613-F8B6-4F36-B649-2CC3657432FF}.Release|x86.ActiveCfg = Release|Any CPU
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Debug|Any CPU.Build.0 = Debug|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Debug|Win32.ActiveCfg = Debug|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Debug|x86.ActiveCfg = Debug|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Debug|x86.Build.0 = Debug|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Release|Any CPU.ActiveCfg = Release|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Release|Mixed Platforms.Build.0 = Release|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Release|Win32.ActiveCfg = Release|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Release|x86.ActiveCfg = Release|x86
-		{2CE4F2AF-046D-46C7-A3C3-1A5FC300A990}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

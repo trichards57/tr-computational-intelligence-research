@@ -7,17 +7,42 @@ using System.Linq;
 namespace MultiAgentLibrary
 {
     using System.Drawing;
-    using System.Threading;    using System.Threading.Tasks;
+    using System.Threading.Tasks;
+    using System.Globalization;
 
     public class Field
     {
         public Point StartPoint { get; set; }
 
-        public List<Agent> AgentsList { get; private set; }
+        private readonly List<Agent> agentsList;
 
-        public List<Point> OriginalRoute { get; private set; }
+        public Collection<Agent> AgentsList
+        {
+            get
+            {
+                return new Collection<Agent>(agentsList);
+            }
+        }
 
-        public List<Point> ShortestRoute { get; private set; }
+        private readonly List<Point> originalRoute;
+
+        public ReadOnlyCollection<Point> OriginalRoute
+        {
+            get
+            {
+                return new ReadOnlyCollection<Point>(originalRoute);
+            }
+        }
+
+        private readonly List<Point> shortestRoute;
+
+        public Collection<Point> ShortestRoute
+        {
+            get
+            {
+                return new Collection<Point>(shortestRoute);
+            }
+        }
 
         private readonly FieldSquare[] squares;
         public ReadOnlyCollection<FieldSquare> Squares
@@ -38,10 +63,10 @@ namespace MultiAgentLibrary
 
         public Field(int width, int height)
         {
-            AgentsList = new List<Agent>();
+            agentsList = new List<Agent>();
             squares = new FieldSquare[width * height];
-            OriginalRoute = new List<Point>();
-            ShortestRoute = new List<Point>();
+            originalRoute = new List<Point>();
+            shortestRoute = new List<Point>();
 
             for (var x = 0; x < width; x++)
             {
@@ -54,9 +79,14 @@ namespace MultiAgentLibrary
             Height = height;
         }
 
-        public Field(int width, int height, string filename)
+        public Field(int width, int height, string fileName)
             : this(width, height)
         {
+            if (width == 0)
+                throw new ArgumentOutOfRangeException("width");
+            if (height == 0)
+                throw new ArgumentOutOfRangeException("height");
+
             // File Format : 
             //
             // x,y,sensor0ang,sensor0val,sensor0state,sensor1ang,sensor1val,sensor1state,...,sensor39ang,sensor39val,sensor39state
@@ -71,11 +101,11 @@ namespace MultiAgentLibrary
 
             // Read the file in to memory.
             // Convert to a list to make sure all the reading is done now, not on demand.
-            var lines = File.ReadAllLines(filename);
+            var lines = File.ReadAllLines(fileName);
 
             // Work out the starting point.
             var firstLineParts = lines.First().Split(new[] { "," }, 3, StringSplitOptions.RemoveEmptyEntries);
-            var origStartPoint = new PointF(float.Parse(firstLineParts[0]), float.Parse(firstLineParts[1]));
+            var origStartPoint = new PointF(float.Parse(firstLineParts[0], CultureInfo.InvariantCulture), float.Parse(firstLineParts[1], CultureInfo.InvariantCulture));
 
             var unscaledOriginalRoute = new List<PointF>();
 
@@ -85,7 +115,7 @@ namespace MultiAgentLibrary
             var rawPoints = lines.AsParallel().SelectMany(l =>
                 {
                     var parts = l.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-                    var origin = new PointF(float.Parse(parts[0]), float.Parse(parts[1]));
+                    var origin = new PointF(float.Parse(parts[0], CultureInfo.InvariantCulture), float.Parse(parts[1], CultureInfo.InvariantCulture));
 
                     unscaledOriginalRoute.Add(origin);
 
@@ -95,8 +125,8 @@ namespace MultiAgentLibrary
                     {
                         var reading = new SensorReading
                         {
-                            Angle = float.Parse(parts[i]),
-                            Range = float.Parse(parts[i + 1]),
+                            Angle = float.Parse(parts[i], CultureInfo.InvariantCulture),
+                            Range = float.Parse(parts[i + 1], CultureInfo.InvariantCulture),
                             State = (SensorState)Enum.Parse(typeof(SensorState), parts[i + 2], true),
                             Origin = origin
                         };
@@ -122,7 +152,7 @@ namespace MultiAgentLibrary
             // Scale the starting point
             StartPoint = new Point((int)Math.Round(origStartPoint.X / xRectSize), (int)Math.Round(origStartPoint.Y / yRectSize));
 
-            OriginalRoute.AddRange(unscaledOriginalRoute.Select(p => new Point((int)Math.Round(p.X / xRectSize), (int)Math.Round(p.Y / yRectSize))));
+            originalRoute.AddRange(unscaledOriginalRoute.Select(p => new Point((int)Math.Round(p.X / xRectSize), (int)Math.Round(p.Y / yRectSize))));
 
             Parallel.ForEach(rawPoints, p =>
                 {
@@ -134,10 +164,10 @@ namespace MultiAgentLibrary
                     {
                         if (p.State == SensorState.End)
                         {
-                            squares[index].Type = SquareType.Destination;
+                            squares[index].SquareType = SquareType.Destination;
                         }
-                        else if (p.State == SensorState.Boundary && squares[index].Type != SquareType.Destination)
-                            squares[index].Type = SquareType.Wall;
+                        else if (p.State == SensorState.Boundary && squares[index].SquareType != SquareType.Destination)
+                            squares[index].SquareType = SquareType.Wall;
                     }
                 });
         }
@@ -146,10 +176,10 @@ namespace MultiAgentLibrary
         {
             Parallel.ForEach(AgentsList, agent => agent.Process(this));
 
-            Parallel.ForEach(squares.Where(square => square.PheremoneLevel > 1 && square.Type == SquareType.Passable),
+            Parallel.ForEach(squares.Where(square => square.PheromoneLevel > 1 && square.SquareType == SquareType.Passable),
                 square =>
                 {
-                    square.PheremoneLevel -= FieldSquare.PheremoneDecayRate;
+                    square.PheromoneLevel -= FieldSquare.PheromoneDecayRate;
                 });
         }
     }

@@ -4,14 +4,6 @@ using System.Drawing;
 
 namespace MultiAgentLibrary
 {
-    public enum Directions
-    {
-        Up,
-        Down,
-        Left,
-        Right
-    }
-
     public class Agent
     {
         private readonly Point startPosition;
@@ -57,7 +49,7 @@ namespace MultiAgentLibrary
             var leftSquare = field.Squares[currentIndex - 1];
             var rightSquare = field.Squares[currentIndex + 1];
 
-            if (currentSquare.Type == SquareType.Destination)
+            if (currentSquare.SquareType == SquareType.Destination)
             {
                 var sizeScale = (1000 / pastRoute.Count) * 0.1;
                 lock (field)
@@ -65,13 +57,14 @@ namespace MultiAgentLibrary
                     foreach (var p in pastRoute)
                     {
 
-                        field.Squares[p.X + field.Width * p.Y].PheremoneLevel += (uint)(FieldSquare.SuccessPheremoneLevel * sizeScale);
+                        field.Squares[p.X + field.Width * p.Y].PheromoneLevel += (uint)(FieldSquare.SuccessPheromoneLevel * sizeScale);
                     }
 
                     if (pastRoute.Count < field.ShortestRoute.Count || field.ShortestRoute.Count == 0)
                     {
                         field.ShortestRoute.Clear();
-                        field.ShortestRoute.AddRange(pastRoute);
+                        foreach (var p in pastRoute)
+                            field.ShortestRoute.Add(p);
                     }
                 }
 
@@ -97,10 +90,10 @@ namespace MultiAgentLibrary
                 if (recentSquares.Contains(rightSquare.Position))
                     rightBias = 0.25;
 
-                var up = upSquare.PheremoneLevel * upBias;
-                var down = downSquare.PheremoneLevel * downBias;
-                var left = leftSquare.PheremoneLevel * leftBias;
-                var right = rightSquare.PheremoneLevel * rightBias;
+                var up = upSquare.PheromoneLevel * upBias;
+                var down = downSquare.PheromoneLevel * downBias;
+                var left = leftSquare.PheromoneLevel * leftBias;
+                var right = rightSquare.PheromoneLevel * rightBias;
 
                 var totalWeight = up + down + left + right;
                 var randNum = rand.NextDouble() * totalWeight;
