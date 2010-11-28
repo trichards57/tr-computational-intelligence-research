@@ -140,7 +140,7 @@ namespace MultiAgentConsole
 
                 foreach (var square in field.Squares)
                 {
-                    var col = square.SquareColor;
+                    var col = square.SquareColour;
                     graphics.FillRectangle(new SolidBrush(col), square.Position.X * 10, square.Position.Y * 10, 10, 10);
                 }
                 foreach (var point in field.OriginalRoute)

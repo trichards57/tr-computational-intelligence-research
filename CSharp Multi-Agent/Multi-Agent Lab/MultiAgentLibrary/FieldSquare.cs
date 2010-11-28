@@ -5,41 +5,41 @@ namespace MultiAgentLibrary
 {
     public class FieldSquare
     {
-        public const int SuccessPheremoneLevel = 1000;
-        public const int PheremoneDecayRate = (SuccessPheremoneLevel) / 1000;
+        public const int SuccessPheromoneLevel = 1000;
+        public const int PheromoneDecayRate = (SuccessPheromoneLevel) / 1000;
 
         private uint pheromoneLevel;
 
-        public const uint MaxPheremoneLevel = uint.MaxValue;
+        public const uint MaxPheromoneLevel = uint.MaxValue;
 
-        public object LockObject = new object();
+        private object lockObject = new object();
 
         public FieldSquare(Point position)
         {
             Position = position;
-            PheremoneLevel = 1;
+            PheromoneLevel = 1;
         }
 
         public Point Position { get; set; }
 
-        public Color SquareColor
+        public Color SquareColour
         {
             get
             {
-                switch (Type)
+                switch (SquareType)
                 {
                     case SquareType.Wall:
                         return Color.Red;
                     case SquareType.Destination:
                         return Color.White;
                     default:
-                        var level = (byte)(Math.Round((255.0 / Math.Log(MaxPheremoneLevel)) * Math.Log(pheromoneLevel)));
+                        var level = (byte)(Math.Round((255.0 / Math.Log(MaxPheromoneLevel)) * Math.Log(pheromoneLevel)));
                         return Color.FromArgb(0, level, 0);
                 }
             }
         }
 
-        public uint PheremoneLevel
+        public uint PheromoneLevel
         {
             get
             {
@@ -47,8 +47,8 @@ namespace MultiAgentLibrary
             }
             set
             {
-                if (value > MaxPheremoneLevel)
-                    pheromoneLevel = MaxPheremoneLevel;
+                if (value > MaxPheromoneLevel)
+                    pheromoneLevel = MaxPheromoneLevel;
                 else if (value < 0)
                     pheromoneLevel = 0;
                 else
@@ -58,7 +58,7 @@ namespace MultiAgentLibrary
 
         private SquareType type;
 
-        public SquareType Type
+        public SquareType SquareType
         {
             get
             {
@@ -70,12 +70,20 @@ namespace MultiAgentLibrary
                 switch (type)
                 {
                     case SquareType.Wall:
-                        PheremoneLevel = 0;
+                        PheromoneLevel = 0;
                         break;
                     case SquareType.Destination:
-                        PheremoneLevel = uint.MaxValue;
+                        PheromoneLevel = uint.MaxValue;
                         break;
                 }
+            }
+        }
+
+        public object LockObject
+        {
+            get
+            {
+                return lockObject;
             }
         }
     }
