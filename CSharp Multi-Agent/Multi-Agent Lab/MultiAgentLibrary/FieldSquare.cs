@@ -1,18 +1,14 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Drawing;
 
 namespace MultiAgentLibrary
 {
-    public class FieldSquare : INotifyPropertyChanged
+    public class FieldSquare
     {
         public const int SuccessPheremoneLevel = 1000;
         public const int PheremoneDecayRate = (SuccessPheremoneLevel) / 1000;
 
-        private Point position;
         private uint pheromoneLevel;
-        private bool passable = true;
-        private bool destination;
 
         public const uint MaxPheremoneLevel = uint.MaxValue;
 
@@ -24,30 +20,22 @@ namespace MultiAgentLibrary
             PheremoneLevel = 1;
         }
 
-        public Point Position
-        {
-            get
-            {
-                return position;
-            }
-            set
-            {
-                position = value;
-                OnPropertyChanged("Position");
-            }
-        }
+        public Point Position { get; set; }
 
         public Color SquareColor
         {
             get
             {
-                if (!passable)
-                    return Color.Red;
-                if (destination)
-                    return Color.White;
-
-                var level = (byte)(Math.Round((255.0 / Math.Log(MaxPheremoneLevel)) * Math.Log(pheromoneLevel)));
-                return Color.FromArgb(0, level, 0);
+                switch (Type)
+                {
+                    case SquareType.Wall:
+                        return Color.Red;
+                    case SquareType.Destination:
+                        return Color.White;
+                    default:
+                        var level = (byte)(Math.Round((255.0 / Math.Log(MaxPheremoneLevel)) * Math.Log(pheromoneLevel)));
+                        return Color.FromArgb(0, level, 0);
+                }
             }
         }
 
@@ -65,53 +53,9 @@ namespace MultiAgentLibrary
                     pheromoneLevel = 0;
                 else
                     pheromoneLevel = value;
-
-                OnPropertyChanged("PheremoneLevel");
-                OnPropertyChanged("SquareColor");
             }
         }
 
-        public bool Passable
-        {
-            get
-            {
-                return passable;
-            }
-            set
-            {
-                passable = value;
-                if (!value)
-                    PheremoneLevel = 0;
-                OnPropertyChanged("SquareColor");
-                OnPropertyChanged("Passable");
-            }
-        }
-
-        public bool Destination
-        {
-            get
-            {
-                return destination;
-            }
-            set
-            {
-                destination = value;
-                if (destination)
-                {
-                    Passable = true;
-                    PheremoneLevel = MaxPheremoneLevel;
-                }
-                OnPropertyChanged("SquareColor");
-                OnPropertyChanged("Destination");
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
+        public SquareType Type { get; set; }
     }
 }

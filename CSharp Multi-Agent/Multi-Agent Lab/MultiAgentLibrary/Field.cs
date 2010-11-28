@@ -6,7 +6,6 @@ using System.Linq;
 
 namespace MultiAgentLibrary
 {
-    using System.Threading;
     using System.Drawing;
     using System.Threading.Tasks;
 
@@ -82,6 +81,7 @@ namespace MultiAgentLibrary
 
             // Split each line up in to a list of readings, then merge them all together.
             // Don't care about order, so can be done in parallel.
+
             var rawPoints = lines.AsParallel().SelectMany(l =>
                 {
                     var parts = l.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
@@ -110,8 +110,6 @@ namespace MultiAgentLibrary
                                         r.State
                                     });
 
-
-
             // Work out the dimensions of the map
             var maxX = rawPoints.Max(p => p.Point.X);
             var maxY = rawPoints.Max(p => p.Point.Y);
@@ -126,7 +124,7 @@ namespace MultiAgentLibrary
 
             OriginalRoute.AddRange(unscaledOriginalRoute.Select(p => new Point((int)Math.Round(p.X / xRectSize), (int)Math.Round(p.Y / yRectSize))));
 
-            var result = Parallel.ForEach(rawPoints, p =>
+            Parallel.ForEach(rawPoints, p =>
                 {
                     var newPoint = new Point((int)Math.Round(p.Point.X / xRectSize), (int)Math.Round(p.Point.Y / yRectSize));
 
@@ -136,33 +134,23 @@ namespace MultiAgentLibrary
                     {
                         if (p.State == SensorState.End)
                         {
-                            squares[index].Destination = true;
-                            squares[index].Passable = true;
+                            squares[index].Type = SquareType.Destination;
                         }
-                        else if (p.State == SensorState.Boundary && squares[index].Destination == false)
-                            squares[index].Passable = false;
+                        else if (p.State == SensorState.Boundary && squares[index].Type != SquareType.Destination)
+                            squares[index].Type = SquareType.Wall;
                     }
                 });
-
-            while (!result.IsCompleted)
-                Thread.Sleep(1);
         }
 
         public void CycleAgents()
         {
-            var result = Parallel.ForEach(AgentsList, agent => agent.Process(this));
+            Parallel.ForEach(AgentsList, agent => agent.Process(this));
 
-            while (!result.IsCompleted)
-                Thread.Sleep(1);
-
-            result = Parallel.ForEach(squares.Where(square => square.PheremoneLevel > 1 && square.Destination == false),
+            Parallel.ForEach(squares.Where(square => square.PheremoneLevel > 1 && square.Type == SquareType.Passable),
                 square =>
                 {
                     square.PheremoneLevel -= FieldSquare.PheremoneDecayRate;
                 });
-
-            while (!result.IsCompleted)
-                Thread.Sleep(1);
         }
     }
 }

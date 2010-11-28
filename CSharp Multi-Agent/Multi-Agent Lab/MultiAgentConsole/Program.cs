@@ -8,6 +8,8 @@ using MultiAgentLibrary;
 
 namespace MultiAgentConsole
 {
+    using System.Diagnostics;
+
     class Program
     {
         static int Main(string[] args)
@@ -27,6 +29,7 @@ namespace MultiAgentConsole
             var maxAgents = 250;
             var startAgents = 1;
             var cycleCount = 10000;
+            var memoryLength = 4;
 
             if (!File.Exists(args[0]))
             {
@@ -60,6 +63,9 @@ namespace MultiAgentConsole
                         case "/c":
                             cycleCount = a.Value;
                             break;
+                        case "/sm":
+                            memoryLength = a.Value;
+                            break;
                         default:
                             Console.WriteLine("Unknown Paramater : {0}", a.ParamLabel);
                             WriteInstructions();
@@ -68,12 +74,13 @@ namespace MultiAgentConsole
                 }
             }
 
-            Console.WriteLine("Data File       : {0}", dataFile);
-            Console.WriteLine("Map Width       : {0}", mapWidth);
-            Console.WriteLine("Map Height      : {0}", mapHeight);
-            Console.WriteLine("Max Agents      : {0}", maxAgents);
-            Console.WriteLine("Starting Agents : {0}", startAgents);
-            Console.WriteLine("Cycle Count     : {0}", cycleCount);
+            Console.WriteLine("Data File                : {0}", dataFile);
+            Console.WriteLine("Map Width                : {0}", mapWidth);
+            Console.WriteLine("Map Height               : {0}", mapHeight);
+            Console.WriteLine("Max Agents               : {0}", maxAgents);
+            Console.WriteLine("Starting Agents          : {0}", startAgents);
+            Console.WriteLine("Cycle Count              : {0}", cycleCount);
+            Console.WriteLine("Short Term Memory Length : {0}", memoryLength);
             Console.WriteLine();
 
             Console.WriteLine("Loading data file...");
@@ -83,22 +90,21 @@ namespace MultiAgentConsole
 
             Console.WriteLine("Setting up initial agents...");
             for (var i = 0; i < startAgents; i++)
-                field.AgentsList.Add(new Agent(field.StartPoint));
+                field.AgentsList.Add(new Agent(field.StartPoint, memoryLength));
             Console.WriteLine("Initial agents set up.");
             Console.WriteLine();
 
             Console.WriteLine("Starting simulation.");
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
 
             for (var i = 0; i < cycleCount; i++)
             {
                 if ((i + 1) % 10 == 0 && field.AgentsList.Count < maxAgents)
                 {
-                    field.AgentsList.Add(new Agent(field.StartPoint));
-                    Console.WriteLine("Adding agent...");
+                    field.AgentsList.Add(new Agent(field.StartPoint, memoryLength));
                 }
                 field.CycleAgents();
-                
-                Console.WriteLine("Cycle : {0}", i);
 #if MOVIE
                 if (i % 10 == 0)
                 {
@@ -121,8 +127,8 @@ namespace MultiAgentConsole
                 }
 #endif
             }
-
-            Console.WriteLine("Simulation stopped.");
+            stopwatch.Stop();
+            Console.WriteLine("Simulation stopped.  Total Time : {0} seconds", stopwatch.Elapsed.TotalSeconds);
             Console.WriteLine();
 
             Console.WriteLine("Outputing final state image.");
@@ -135,7 +141,7 @@ namespace MultiAgentConsole
                 {
                     var col = square.SquareColor;
                     graphics.FillRectangle(new SolidBrush(col), square.Position.X * 10, square.Position.Y * 10, 10, 10);
-                }                
+                }
                 foreach (var point in field.OriginalRoute)
                 {
                     graphics.FillRectangle(Brushes.Magenta, point.X * 10 + 5, point.Y * 10 + 5, 5, 5);
@@ -177,6 +183,8 @@ namespace MultiAgentConsole
             Console.WriteLine("          simulation. Default : 1");
             Console.WriteLine("    /c  : An integer specifying the number of cycles the sequence will");
             Console.WriteLine("          run for. Default : 10000");
+            Console.WriteLine("    /sm : An integer specifying the length of the agent's short term route");
+            Console.WriteLine("          memory, which is used to prevent back tracking. Default : 4");
             Console.WriteLine();
             Console.WriteLine("Return Values : ");
             Console.WriteLine("0 : Success");
