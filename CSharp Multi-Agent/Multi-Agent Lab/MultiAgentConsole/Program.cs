@@ -68,7 +68,7 @@ namespace MultiAgentConsole
                             memoryLength = a.Value;
                             break;
                         default:
-                            Console.WriteLine("Unknown Paramater : {0}", a.ParamLabel);
+                            Console.WriteLine("Unknown Parameter : {0}", a.ParamLabel);
                             WriteInstructions();
                             return 1;
                     }
