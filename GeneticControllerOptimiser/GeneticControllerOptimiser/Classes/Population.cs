@@ -103,40 +103,7 @@ namespace GeneticControllerOptimiser.Classes
 
         public static int HorizontalFitnessCalculator(IList<SystemState> results, double targetX, double targetY, double targetAngle, double accuracy)
         {
-            int fitness;
-
-            var data = targetX < 0 ? results.Select(r => -r.X).ToList() : results.Select(r => r.X).ToList();
-            targetX = Math.Abs(targetX);
-
-            var minValue = data.Min();
-            var maxValue = data.Max();
-
-            if (minValue < -targetX * accuracy)
-            {
-                // Must be unstable as it oscillates the wrong way.
-                fitness = 0;
-            }
-            else if (maxValue < targetX * (1 - accuracy))
-            {
-                // Does not reach the target x (error allowed within accuracy).
-                fitness = 10;
-            }
-            else if (maxValue > targetX * 1.18)
-            {
-                // Overshoots too far.  Not very good. (18% error allowed.)
-                fitness = 20;
-            }
-            else
-            {
-                var speed = 1000 - results.IndexOf(results.First(s =>
-                {
-                    var currentIndex = results.IndexOf(s);
-                    return data.Skip(currentIndex + 1).All(r => r > targetX * (1 - accuracy) && r < targetX * (1 + accuracy));
-                }));
-                fitness = speed;
-            }
-
-            return fitness;
+            return GenericFitnessCalculator(results, ss => ss.X, targetX, accuracy);
         }
 
         /// <summary>
@@ -148,36 +115,7 @@ namespace GeneticControllerOptimiser.Classes
         /// <returns></returns>
         public static int AngleFitnessCalculator(IList<SystemState> results, double targetX, double targetY, double targetAngle, double accuracy)
         {
-            int fitness;
-            var minValue = results.Min(s => s.Angle);
-            var maxValue = results.Max(s => s.Angle);
-
-            if (minValue < -targetAngle * accuracy)
-            {
-                // Must be unstable as it oscillates the wrong way.
-                fitness = 0;
-            }
-            else if (maxValue < targetAngle * (1 - accuracy))
-            {
-                // Does not reach the target angle
-                fitness = 10;
-            }
-            else if (maxValue > targetAngle * 1.18)
-            {
-                // Overshoots too far.  Not very good. (18% error allowed.)
-                fitness = 20;
-            }
-            else
-            {
-                var speed = 1000 - results.IndexOf(results.First(s =>
-                {
-                    var currentIndex = results.IndexOf(s);
-                    return results.Skip(currentIndex + 1).All(r => r.Angle > targetAngle * (1 - accuracy) && r.Angle < targetAngle * (1 + accuracy));
-                }));
-                fitness = speed;
-            }
-
-            return fitness;
+            return GenericFitnessCalculator(results, ss => ss.Angle, targetAngle, accuracy);
         }
 
         private static int GenericFitnessCalculator(IList<SystemState> results, Func<SystemState, double> dataTransform, double targetValue, double accuracy)
@@ -223,41 +161,7 @@ namespace GeneticControllerOptimiser.Classes
 
         public static int VerticalFitnessCalculator(IList<SystemState> results, double targetX, double targetY, double targetAngle, double accuracy)
         {
-            int fitness;
-
-            var data = targetY < 0 ? results.Select(r => -r.Y).ToList() : results.Select(r => r.Y).ToList();
-            targetY = Math.Abs(targetY);
-
-            var min = data.Min();
-            var max = data.Max();
-
-
-            if (min < -targetAngle * accuracy)
-            {
-                // Must be unstable as it oscillates the wrong way.
-                fitness = 0;
-            }
-            else if (max < targetY * (1-accuracy))
-            {
-                // Does not reach the target y (5% error allowed).
-                fitness = 10;
-            }
-            else if (max > targetY * 1.18)
-            {
-                // Overshoots too far.  Not very good. (18% error allowed.)
-                fitness = 20;
-            }
-            else
-            {
-                var speed = 1000 - results.IndexOf(results.First(s =>
-                {
-                    var currentIndex = results.IndexOf(s);
-                    return data.Skip(currentIndex + 1).All(r => r > targetY * (1 - accuracy) && r < targetY * (1 + accuracy));
-                }));
-                fitness = speed;
-            }
-
-            return fitness;
+            return GenericFitnessCalculator(results, ss => ss.Y, targetY, accuracy);
         }
     }
 }
