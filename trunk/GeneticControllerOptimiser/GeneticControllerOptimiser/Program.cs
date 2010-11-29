@@ -21,17 +21,17 @@ namespace GeneticControllerOptimiser
 
             var genomeCount = 1000;
             var targetAngle = Math.PI / 4;
-            var targetY = 20.0;
-            var targetX = 20.0;
+            var targetY = 100.0;
+            var targetX = 50.0;
             var minusTargetY = -targetY;
             var minusTargetX = -targetX;
             var mutationRate = 0.75;
             var angleCycleCount = 500;
-            var verticalCycleCount = 500;
-            var horizontalCycleCount = 1000;
-            var angleFitness = 960;
-            var verticalFitness = 900;
-            var horizontalFitness = 860;
+            var verticalCycleCount = 2500;
+            var horizontalCycleCount = 2500;
+            var angleFitness = 4960;
+            var verticalFitness = 2500;
+            var horizontalFitness = 2500;
             var angleAccuracy = 0.01;
             var verticalAccuracy = 0.05;
             var horizontalAccuracy = 0.1;
@@ -216,6 +216,8 @@ namespace GeneticControllerOptimiser
                 foreach (var g in topGenome)
                     file.Write("{0},", g);
             }
+
+            var finalC = Controller.FromGenome(topGenome.ToArray());
 
             return 0;
         }

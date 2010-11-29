@@ -118,11 +118,11 @@ namespace GeneticControllerOptimiser.Classes
             return GenericFitnessCalculator(results, ss => ss.Angle, targetAngle, accuracy);
         }
 
-        private static int GenericFitnessCalculator(IList<SystemState> results, Func<SystemState, double> dataTransform, double targetValue, double accuracy)
+        private static int GenericFitnessCalculator(IEnumerable<SystemState> results, Func<SystemState, double> dataTransform, double targetValue, double accuracy)
         {
             int fitness;
 
-            var data = results.Select(dataTransform);
+            var data = results.Select(dataTransform).ToList();
 
             data = targetValue < 0 ? data.Select(r => -r).ToList() : data;
             targetValue = Math.Abs(targetValue);
@@ -148,12 +148,14 @@ namespace GeneticControllerOptimiser.Classes
             }
             else
             {
-                var speed = 1000 - results.IndexOf(results.First(s =>
+                var speed = data.Count;
+                for (var i = data.Count - 1; i >= 0; i--)
                 {
-                    var currentIndex = results.IndexOf(s);
-                    return data.Skip(currentIndex + 1).All(r => r > targetValue * (1 - accuracy) && r < targetValue * (1 + accuracy));
-                }));
-                fitness = speed;
+                    if (data[i] <= (targetValue * (1 + accuracy)) && data[i] >= (targetValue * (1 - accuracy))) continue;
+                    speed = i + 1;
+                    break;
+                }
+                fitness = 5000 - speed;
             }
 
             return fitness;
