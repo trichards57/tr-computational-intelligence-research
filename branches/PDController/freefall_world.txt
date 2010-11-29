@@ -1,0 +1,7 @@
+# define boundary list of points  x1,y1,x2,y2  . . . .
+wall boundary
+	10,10,200,10,200,2000,10,2000,10,10
+
+# pod: initial position
+pod
+    100,960
