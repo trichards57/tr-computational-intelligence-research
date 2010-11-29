@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="Classes\Controller.cs" />
     <Compile Include="Classes\MultiRandom.cs" />
+    <Compile Include="Classes\Population.cs" />
     <Compile Include="Classes\PopulationMember.cs" />
     <Compile Include="Classes\System.cs" />
     <Compile Include="Classes\SystemState.cs" />
