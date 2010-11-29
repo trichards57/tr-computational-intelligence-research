@@ -6,6 +6,7 @@ using GeneticControllerOptimiser.Classes;
 namespace GeneticControllerOptimiser
 {
     using System.Globalization;
+    using System.IO;
     using System.Reflection;
     using System.Threading.Tasks;
     using System.Collections.Concurrent;
@@ -92,16 +93,16 @@ namespace GeneticControllerOptimiser
                         horizontalFitness = a.Value;
                         break;
                     case "/aa":
-                        angleAccuracy = a.Value;
+                        angleAccuracy = a.DoubleValue;
                         break;
                     case "/va":
-                        verticalAccuracy = a.Value;
+                        verticalAccuracy = a.DoubleValue;
                         break;
                     case "/ha":
-                        horizontalAccuracy = a.Value;
+                        horizontalAccuracy = a.DoubleValue;
                         break;
                     default:
-                        Console.WriteLine("Unknown Paramater : {0}", a.ParamLabel);
+                        Console.WriteLine("Unknown Parameter : {0}", a.ParamLabel);
                         WriteInstructions();
                         return 1;
                 }
@@ -118,6 +119,9 @@ namespace GeneticControllerOptimiser
             Console.WriteLine("Angle Accuracy         : {0}", angleAccuracy);
             Console.WriteLine("Vertical Accuracy      : {0}", verticalAccuracy);
             Console.WriteLine("Horizontal Accuracy    : {0}", horizontalAccuracy);
+            Console.WriteLine("Angle Fitness          : {0}", angleFitness);
+            Console.WriteLine("Vertical Fitness       : {0}", verticalFitness);
+            Console.WriteLine("Horizontal Fitness     : {0}", horizontalFitness);
             Console.WriteLine();
 
             Console.WriteLine("Optimising angle control...");
@@ -206,6 +210,13 @@ namespace GeneticControllerOptimiser
                 GC.Collect();
             } while (fitness < horizontalFitness);
 
+            Console.WriteLine("Writing genome data file.");
+            using (var file = new StreamWriter(File.OpenWrite("genome.csv")))
+            {
+                foreach (var g in topGenome)
+                    file.Write("{0}", g);
+            }
+
             return 0;
         }
 
@@ -229,6 +240,18 @@ namespace GeneticControllerOptimiser
             Console.WriteLine("           control for. Default : 500");
             Console.WriteLine("    /vcc : An integer specifying the number of cycles to test the vertical");
             Console.WriteLine("           control for. Default : 500");
+            Console.WriteLine("    /af  : An integer specifying the target fitness for the angle controller.");
+            Console.WriteLine("           Default : 960");
+            Console.WriteLine("    /vf  : An integer specifying the target fitness for the vertical controller.");
+            Console.WriteLine("           Default : 900");
+            Console.WriteLine("    /hf  : An integer specifying the target fitness for the horizontal controller.");
+            Console.WriteLine("           Default : 860");
+            Console.WriteLine("    /aa  : An integer specifying the target accuracy for the angle controller.");
+            Console.WriteLine("           Default : 0.01");
+            Console.WriteLine("    /va  : An integer specifying the target accuracy for the vertical controller.");
+            Console.WriteLine("           Default : 0.05");
+            Console.WriteLine("    /ha  : An integer specifying the target accuracy for the horizontal controller.");
+            Console.WriteLine("           Default : 0.1");
             Console.WriteLine();
             Console.WriteLine("Return Values : ");
             Console.WriteLine("0 : Success");
