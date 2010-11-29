@@ -214,7 +214,7 @@ namespace GeneticControllerOptimiser
             using (var file = new StreamWriter(File.OpenWrite("genome.csv")))
             {
                 foreach (var g in topGenome)
-                    file.Write("{0}", g);
+                    file.Write("{0},", g);
             }
 
             return 0;
