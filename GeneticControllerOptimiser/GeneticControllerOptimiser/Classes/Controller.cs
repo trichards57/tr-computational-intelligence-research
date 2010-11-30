@@ -38,16 +38,16 @@ namespace GeneticControllerOptimiser.Classes
             {
 
                 BigXSpeed = genome[0] + 50, // Must be positive
-                MidXSpeed = 0, // Must be positive
-                SmlXSpeed = 0, // Must be positive
-                BigXError = 0, // Must be positive
-                MidXError = 0, // Must be positive
+                MidXSpeed = genome[1] + 50, // Must be positive
+                SmlXSpeed = genome[2] + 50, // Must be positive
+                BigXError = genome[3] + 50, // Must be positive
+                MidXError = genome[4] + 50, // Must be positive
                 PropelAngle = 0.1, // Must be positive and between 2 and -2
                 BigYSpeed = genome[6] + 50, // Must be positive
-                MidYSpeed = 0, // Must be positive
-                SmlYSpeed = 0, // Must be positive
-                BigYError = 0, // Must be positive
-                MidYError = 0, // Must be positive
+                MidYSpeed = genome[7] + 50, // Must be positive
+                SmlYSpeed = genome[8] + 50, // Must be positive
+                BigYError = genome[9] + 50, // Must be positive
+                MidYError = genome[10] + 50, // Must be positive
                 UpForce = 0.4, // Set to save time
                 DownForce = 0.0, // Set to save time
                 AngleProportionalGain = genome[13],

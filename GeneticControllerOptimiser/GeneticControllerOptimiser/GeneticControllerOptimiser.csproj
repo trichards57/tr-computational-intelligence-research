@@ -72,6 +72,7 @@
     <Compile Include="Classes\PopulationMember.cs" />
     <Compile Include="Classes\System.cs" />
     <Compile Include="Classes\SystemState.cs" />
+    <Compile Include="Classes\TargetState.cs" />
     <Compile Include="Classes\ThrusterState.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

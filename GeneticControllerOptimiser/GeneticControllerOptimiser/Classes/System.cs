@@ -20,7 +20,7 @@ namespace GeneticControllerOptimiser.Classes
 
         public bool DisableGravity { get; set; }
 
-        public SystemState Process(ThrusterState state)
+        public SystemState Process(ThrusterState state, TargetState target)
         {
             state.Limit();
 
@@ -28,13 +28,21 @@ namespace GeneticControllerOptimiser.Classes
             Y += DyDt * TimeStep;
             Angle += DAngleDt * TimeStep;
 
+            var fail = false;
+
+            if (Math.Abs(X) > target.XCutOff || Math.Abs(Y) > target.YCutOff || Math.Abs(Angle) > target.AngleCutOff)
+            {
+                fail = true;
+            }
+
+
             DyDt = state.Up * ThrustMax * Math.Cos(Angle) / Mass;
             if (!DisableGravity)
                 DyDt += Gravity;
             DxDt = state.Up * ThrustMax * Math.Sin(Angle) / Mass;
             DAngleDt = (state.Left - state.Right) * SpinThrustMax / Inertia;
 
-            return new SystemState { Angle = Angle, DAngleDt = DAngleDt, DxDt = DxDt, DyDt = DyDt, X = X, Y = Y };
+            return new SystemState { Angle = Angle, DAngleDt = DAngleDt, DxDt = DxDt, DyDt = DyDt, X = X, Y = Y, OvershootFail = fail };
         }
     }
 }

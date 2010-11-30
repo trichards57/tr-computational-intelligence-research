@@ -21,17 +21,17 @@ namespace GeneticControllerOptimiser
 
             var genomeCount = 1000;
             var targetAngle = Math.PI / 4;
-            var targetY = 100.0;
-            var targetX = 50.0;
+            var targetY = 20.0;
+            var targetX = 20.0;
             var minusTargetY = -targetY;
             var minusTargetX = -targetX;
             var mutationRate = 0.75;
             var angleCycleCount = 500;
-            var verticalCycleCount = 2500;
-            var horizontalCycleCount = 2500;
-            var angleFitness = 4960;
-            var verticalFitness = 2500;
-            var horizontalFitness = 2500;
+            var verticalCycleCount = 500;
+            var horizontalCycleCount = 1000;
+            var angleFitness = 1460;
+            var verticalFitness = 1400;
+            var horizontalFitness = 1860;
             var angleAccuracy = 0.01;
             var verticalAccuracy = 0.05;
             var horizontalAccuracy = 0.1;
@@ -145,7 +145,7 @@ namespace GeneticControllerOptimiser
             {
                 var results = new ConcurrentBag<PopulationMember>();
 
-                Parallel.ForEach(population, p => results.Add(p.Process(angleCycleCount, 0, 0, Math.PI - targetAngle, Population.AngleFitnessCalculator, angleAccuracy)));
+                Parallel.ForEach(population, p => results.Add(p.Process(angleCycleCount, TargetVariables.Angle, 0, 0, Math.PI - targetAngle, Population.AngleFitnessCalculator, angleAccuracy)));
 
                 population = Population.GetNew(results, mutationRate, Population.MutateAngle, out fitness, out topGenome);
 
@@ -174,7 +174,7 @@ namespace GeneticControllerOptimiser
             {
                 var results = new ConcurrentBag<PopulationMember>();
 
-                Parallel.ForEach(population, p => results.Add(p.Process(verticalCycleCount, 0, targetY, Math.PI, Population.VerticalFitnessCalculator, verticalAccuracy, true, 0, minusTargetY, Math.PI)));
+                Parallel.ForEach(population, p => results.Add(p.Process(verticalCycleCount, TargetVariables.Vertical, 0, targetY, Math.PI, Population.VerticalFitnessCalculator, verticalAccuracy, true, 0, minusTargetY, Math.PI)));
 
                 population = Population.GetNew(results, mutationRate, Population.MutateYControl, out fitness, out topGenome, p => (p.Fitness + p.NegativeFitness) / 2, false, Math.PI);
 
@@ -203,7 +203,7 @@ namespace GeneticControllerOptimiser
             {
                 var results = new ConcurrentBag<PopulationMember>();
 
-                Parallel.ForEach(population, p => results.Add(p.Process(horizontalCycleCount, targetX, 0, Math.PI, Population.HorizontalFitnessCalculator, horizontalAccuracy, true, minusTargetX, 0, Math.PI)));
+                Parallel.ForEach(population, p => results.Add(p.Process(horizontalCycleCount, TargetVariables.Horizontal | TargetVariables.Vertical, targetX, targetY, Math.PI, Population.HorizontalFitnessCalculator, horizontalAccuracy, true, minusTargetX, 0, Math.PI)));
 
                 population = Population.GetNew(results, mutationRate, Population.MutateXControl, out fitness, out topGenome, p => (p.Fitness + p.NegativeFitness) / 2, false, Math.PI);
 
@@ -216,8 +216,6 @@ namespace GeneticControllerOptimiser
                 foreach (var g in topGenome)
                     file.Write("{0},", g);
             }
-
-            var finalC = Controller.FromGenome(topGenome.ToArray());
 
             return 0;
         }

@@ -118,9 +118,13 @@ namespace GeneticControllerOptimiser.Classes
             return GenericFitnessCalculator(results, ss => ss.Angle, targetAngle, accuracy);
         }
 
-        private static int GenericFitnessCalculator(IEnumerable<SystemState> results, Func<SystemState, double> dataTransform, double targetValue, double accuracy)
+        private static int GenericFitnessCalculator(IList<SystemState> results, Func<SystemState, double> dataTransform, double targetValue, double accuracy)
         {
             int fitness;
+
+            if (results.Last().OvershootFail)
+                // The simulation detected an overshoot. Don't bother calculating fitness.
+                return 20;
 
             var data = results.Select(dataTransform).ToList();
 
@@ -148,14 +152,15 @@ namespace GeneticControllerOptimiser.Classes
             }
             else
             {
-                var speed = data.Count;
+                fitness = 1000;
                 for (var i = data.Count - 1; i >= 0; i--)
                 {
-                    if (data[i] <= (targetValue * (1 + accuracy)) && data[i] >= (targetValue * (1 - accuracy))) continue;
-                    speed = i + 1;
-                    break;
+                    if (data[i] > targetValue * (1 + accuracy) || data[i] < targetValue * (1 - accuracy))
+                    {
+                        fitness = 1000  + (data.Count - i);
+                        break;
+                    }
                 }
-                fitness = 5000 - speed;
             }
 
             return fitness;
