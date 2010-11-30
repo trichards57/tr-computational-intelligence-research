@@ -67,10 +67,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\Controller.cs" />
+    <Compile Include="Classes\Genome.cs" />
     <Compile Include="Classes\MultiRandom.cs" />
     <Compile Include="Classes\Population.cs" />
     <Compile Include="Classes\PopulationMember.cs" />
     <Compile Include="Classes\System.cs" />
+    <Compile Include="Classes\SystemResults.cs" />
     <Compile Include="Classes\SystemState.cs" />
     <Compile Include="Classes\TargetState.cs" />
     <Compile Include="Classes\ThrusterState.cs" />

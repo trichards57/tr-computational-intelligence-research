@@ -9,7 +9,7 @@ namespace GeneticControllerOptimiser.Classes
 
     static class Population
     {
-        public static ParallelQuery<PopulationMember> GetNew(IEnumerable<PopulationMember> simulationResults, double mutationRate, Action<List<double>, double> mutateFunction, out int fitness, out IList<double> topGenome, Func<PopulationMember, int> fitnessTransformer = null, bool disableGravity = true, double initialAngle = 0)
+        public static ParallelQuery<PopulationMember> GetNew(IEnumerable<PopulationMember> simulationResults, double mutationRate, Action<Genome, double> mutateFunction, out int fitness, out Genome topGenome, Func<PopulationMember, int> fitnessTransformer = null, bool disableGravity = true, double initialAngle = 0)
         {
             if (fitnessTransformer == null)
                 fitnessTransformer = new Func<PopulationMember, int>(a => a.Fitness);
@@ -22,7 +22,7 @@ namespace GeneticControllerOptimiser.Classes
             var topThreeQuarterGenomes = orderedResults.Take(3 * simulationResults.Count() / 4).Select(p => p.Genome).ToList();
             var topQuarterGenomes = topThreeQuarterGenomes.Take(simulationResults.Count() / 4);
 
-            var genomeBag = new ConcurrentBag<List<double>>();
+            var genomeBag = new ConcurrentBag<Genome>();
             var mainPart = Partitioner.Create(topThreeQuarterGenomes);
             Parallel.ForEach(mainPart, genomeBag.Add);
 
@@ -46,9 +46,9 @@ namespace GeneticControllerOptimiser.Classes
             return population;
         }
 
-        public static ParallelQuery<PopulationMember> Create(IEnumerable<List<double>> genomeList, bool disableGravity = true, double initialAngle = 0.0)
+        public static ParallelQuery<PopulationMember> Create(IEnumerable<Genome> genomeList, bool disableGravity = true, double initialAngle = 0.0)
         {
-            return genomeList.AsParallel().Select(g => new PopulationMember { Genome = g, Controller = Controller.FromGenome(g.ToArray()), System = new System { DisableGravity = disableGravity, Angle = initialAngle }, NegativeController = Controller.FromGenome(g.ToArray()), NegativeSystem = new System { DisableGravity = disableGravity, Angle = initialAngle } });
+            return genomeList.AsParallel().Select(g => new PopulationMember { Genome = g, Controller = Controller.FromGenome(g), System = new System { DisableGravity = disableGravity, Angle = initialAngle }, NegativeController = Controller.FromGenome(g), NegativeSystem = new System { DisableGravity = disableGravity, Angle = initialAngle } });
         }
 
         /// <summary>
@@ -57,48 +57,41 @@ namespace GeneticControllerOptimiser.Classes
         /// <param name="item1">The first parent.</param>
         /// <param name="item2">The second parent.</param>
         /// <returns>The child genome.</returns>
-        public static List<double> Breed(List<double> item1, List<double> item2)
+        public static Genome Breed(Genome item1, Genome item2)
         {
             var cutPoint = MultiRandom.Next(0, item1.Count);
-            var child = item1.Take(cutPoint).ToList();
-            child.AddRange(item2.Skip(cutPoint));
+            var g = new Genome();
+            g.AddRange(item1.Take(cutPoint).ToList());
+            g.AddRange(item2.Skip(cutPoint));
 
-            return child;
+            return g;
         }
 
-        public static double NewGene()
-        {
-            return MultiRandom.NextDouble() * 100 - 50;
-        }
 
         /// <summary>
         /// Mutates the genes related to angle control in <paramref name="item"/>.
         /// </summary>
         /// <param name="item">The item to mutate.</param>
         /// <returns>The mutated item.</returns>
-        public static void MutateAngle(List<double> item, double mutationRate)
+        public static void MutateAngle(Genome item, double mutationRate)
         {
-            var index = MultiRandom.Next(13, item.Count);
+            var index = MultiRandom.Next(13, 16);
 
             item[index] = MultiRandom.NextDouble() * 100 - 50;
         }
 
-        public static void MutateYControl(List<double> item, double mutationRate)
+        public static void MutateYControl(Genome item, double mutationRate)
         {
-            for (var i = 6; i < 13; i++)
-            {
-                if (MultiRandom.NextDouble() < mutationRate)
-                    item[i] = MultiRandom.NextDouble() * 100 - 50;
-            }
+            var index = MultiRandom.Next(6, 11);
+
+            item[index] = MultiRandom.NextDouble() * 100 - 50;
         }
 
-        public static void MutateXControl(IList<double> item, double mutationRate)
+        public static void MutateXControl(Genome item, double mutationRate)
         {
-            for (var i = 0; i < 6; i++)
-            {
-                if (MultiRandom.NextDouble() < mutationRate)
-                    item[i] = MultiRandom.NextDouble() * 100 - 50;
-            }
+            var index = MultiRandom.Next(0, 5);
+
+            item[index] = MultiRandom.NextDouble() * 100 - 50;
         }
 
         public static int HorizontalFitnessCalculator(IList<SystemState> results, double targetX, double targetY, double targetAngle, double accuracy)

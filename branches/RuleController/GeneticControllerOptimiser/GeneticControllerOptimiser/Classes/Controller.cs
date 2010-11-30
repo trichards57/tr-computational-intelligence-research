@@ -30,9 +30,9 @@ namespace GeneticControllerOptimiser.Classes
         public double LastSideForce { get; set; }
         public double AngleErrorIntegral { get; set; }
 
-        public static Controller FromGenome(double[] genome)
+        public static Controller FromGenome(Genome genome)
         {
-            if (genome.Length != 16)
+            if (genome.Count != 16)
                 throw new ArgumentException("Genome is not the right length.", "genome");
             return new Controller
             {

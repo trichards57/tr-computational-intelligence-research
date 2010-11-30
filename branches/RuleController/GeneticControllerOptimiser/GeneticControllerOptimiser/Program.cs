@@ -125,13 +125,13 @@ namespace GeneticControllerOptimiser
             Console.WriteLine();
 
             Console.WriteLine("Optimising angle control...");
-            var genomeBag = new ConcurrentBag<List<double>>();
+            var genomeBag = new ConcurrentBag<Genome>();
 
             Parallel.For(0, genomeCount, i =>
                 {
-                    var genome = new List<double>();
+                    var genome = new Genome();
                     for (var j = 0; j < 16; j++)
-                        genome.Add(Population.NewGene());
+                        genome.Add(Genome.NewGene());
                     genomeBag.Add(genome);
                 });
 
@@ -139,7 +139,9 @@ namespace GeneticControllerOptimiser
 
             int fitness;
 
-            IList<double> topGenome;
+            Genome topGenome;
+
+            PopulationMember.PastResults.Clear();
 
             do
             {
@@ -155,13 +157,13 @@ namespace GeneticControllerOptimiser
 
             var bestAngleGenes = topGenome.Skip(13);
 
-            genomeBag = new ConcurrentBag<List<double>>();
+            genomeBag = new ConcurrentBag<Genome>();
 
             Parallel.For(0, genomeCount, i =>
             {
-                var genome = new List<double>();
+                var genome = new Genome();
                 for (var j = 0; j < 13; j++)
-                    genome.Add(Population.NewGene());
+                    genome.Add(Genome.NewGene());
                 genome.AddRange(bestAngleGenes);
                 genomeBag.Add(genome);
             });
@@ -169,6 +171,8 @@ namespace GeneticControllerOptimiser
             population = Population.Create(genomeBag, false, Math.PI);
 
             Console.WriteLine("Optimising vertical control...");
+
+            PopulationMember.PastResults.Clear();
 
             do
             {
@@ -183,13 +187,13 @@ namespace GeneticControllerOptimiser
 
             var bestYGenes = topGenome.Skip(6).Take(7);
 
-            genomeBag = new ConcurrentBag<List<double>>();
+            genomeBag = new ConcurrentBag<Genome>();
 
             Parallel.For(0, genomeCount, i =>
             {
-                var genome = new List<double>();
+                var genome = new Genome();
                 for (var j = 0; j < 6; j++)
-                    genome.Add(Population.NewGene());
+                    genome.Add(Genome.NewGene());
                 genome.AddRange(bestYGenes);
                 genome.AddRange(bestAngleGenes);
                 genomeBag.Add(genome);
@@ -198,6 +202,8 @@ namespace GeneticControllerOptimiser
             population = Population.Create(genomeBag, false, Math.PI);
 
             Console.WriteLine("Optimising horizontal control...");
+
+            PopulationMember.PastResults.Clear();
 
             do
             {
@@ -216,6 +222,8 @@ namespace GeneticControllerOptimiser
                 foreach (var g in topGenome)
                     file.Write("{0},", g);
             }
+
+            var finalController = Controller.FromGenome(topGenome);
 
             return 0;
         }
