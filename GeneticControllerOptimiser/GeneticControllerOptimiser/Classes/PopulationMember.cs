@@ -15,7 +15,9 @@ namespace GeneticControllerOptimiser.Classes
 
     class PopulationMember
     {
-        public List<double> Genome { get; set; }
+        public static Dictionary<Genome, SystemResults> PastResults { get; set; }
+
+        public Genome Genome { get; set; }
         public List<SystemState> Results { get; set; }
         public List<SystemState> NegativeResults { get; set; }
         public Controller Controller { get; set; }
@@ -25,9 +27,23 @@ namespace GeneticControllerOptimiser.Classes
         public int Fitness { get; set; }
         public int NegativeFitness { get; set; }
 
+        static PopulationMember()
+        {
+            PastResults = new Dictionary<Genome, SystemResults>();
+        }
+
         public PopulationMember Process(int cycleCount, TargetVariables targetVariable, double targetX, double targetY, double targetAngle, FitnessFunction fitnessFunction, double accuracy, bool doNegative = false, double minusTargetX = 0, double minusTargetY = 0, double minusTargetAngle = 0)
         {
             var output = new PopulationMember();
+
+            if (PastResults.ContainsKey(Genome))
+            {
+                output.Genome = Genome;
+                output.Fitness = PastResults[Genome].Fitness;
+                output.NegativeFitness = PastResults[Genome].NegativeFitness;
+
+                return output;
+            }
 
             var systemState = new SystemState();
             var targetState = new TargetState() { TargetX = targetX, TargetY = targetY, TargetAngle = targetAngle };
@@ -78,6 +94,11 @@ namespace GeneticControllerOptimiser.Classes
                 output.NegativeFitness = fitnessFunction(negResult, minusTargetX, minusTargetY, Math.PI - minusTargetAngle, accuracy);
                 output.NegativeResults = result;
                 output.NegativeSystem = System;
+            }
+
+            lock (PastResults)
+            {
+                PastResults.Add(Genome, new SystemResults() { Fitness = output.Fitness, NegativeFitness = output.NegativeFitness });
             }
 
             return output;
