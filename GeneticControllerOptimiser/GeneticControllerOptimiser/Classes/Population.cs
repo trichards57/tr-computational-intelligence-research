@@ -42,13 +42,13 @@ namespace GeneticControllerOptimiser.Classes
             fitness = fitnessTransformer(orderedResults.First());
             topGenome = orderedResults.First().Genome;
 
-            var population = Create(genomeBag, disableGravity, initialAngle);
+            var population = Create(genomeBag);
             return population;
         }
 
-        public static ParallelQuery<PopulationMember> Create(IEnumerable<List<double>> genomeList, bool disableGravity = true, double initialAngle = 0.0)
+        public static ParallelQuery<PopulationMember> Create(IEnumerable<List<double>> genomeList)
         {
-            return genomeList.AsParallel().Select(g => new PopulationMember { Genome = g, Controller = Controller.FromGenome(g.ToArray()), System = new System { DisableGravity = disableGravity, Angle = initialAngle }, NegativeController = Controller.FromGenome(g.ToArray()), NegativeSystem = new System { DisableGravity = disableGravity, Angle = initialAngle } });
+            return genomeList.AsParallel().Select(g => new PopulationMember { Genome = g, Controller = Controller.FromGenome(g.ToArray()), System = new System(), NegativeController = Controller.FromGenome(g.ToArray()), NegativeSystem = new System() });
         }
 
         /// <summary>
@@ -71,30 +71,9 @@ namespace GeneticControllerOptimiser.Classes
             return MultiRandom.NextDouble() * 100 - 50;
         }
 
-        /// <summary>
-        /// Mutates the genes related to angle control in <paramref name="item"/>.
-        /// </summary>
-        /// <param name="item">The item to mutate.</param>
-        /// <returns>The mutated item.</returns>
-        public static void MutateAngle(List<double> item, double mutationRate)
+        public static void Mutate(IList<double> item, double mutationRate)
         {
-            var index = MultiRandom.Next(13, item.Count);
-
-            item[index] = MultiRandom.NextDouble() * 100 - 50;
-        }
-
-        public static void MutateYControl(List<double> item, double mutationRate)
-        {
-            for (var i = 6; i < 13; i++)
-            {
-                if (MultiRandom.NextDouble() < mutationRate)
-                    item[i] = MultiRandom.NextDouble() * 100 - 50;
-            }
-        }
-
-        public static void MutateXControl(IList<double> item, double mutationRate)
-        {
-            for (var i = 0; i < 6; i++)
+            for (var i = 0; i < item.Count; i++)
             {
                 if (MultiRandom.NextDouble() < mutationRate)
                     item[i] = MultiRandom.NextDouble() * 100 - 50;
@@ -106,16 +85,19 @@ namespace GeneticControllerOptimiser.Classes
             return GenericFitnessCalculator(results, ss => ss.X, targetX, accuracy);
         }
 
-        /// <summary>
-        /// Calculates the fitness for the given system results.
-        /// </summary>
-        /// <param name="results">The results to analyse.</param>
-        /// <param name="targetAngle">The target angle.</param>
-        /// <param name="accuracy"></param>
-        /// <returns></returns>
-        public static int AngleFitnessCalculator(IList<SystemState> results, double targetX, double targetY, double targetAngle, double accuracy)
+        public static int FitnessCalculator(IList<SystemState> results, double targetX, double targetY, double targetAngle, double accuracy)
         {
-            return GenericFitnessCalculator(results, ss => ss.Angle, targetAngle, accuracy);
+            if (results.Any(s => s.Angle < (Math.PI / 2) || s.Angle > (3 * Math.PI / 2))) return 0;
+            if (results.Any(s => s.Angle < (Math.PI / 4) || s.Angle > (5 * Math.PI / 4))) return 10;
+
+            var horizontalFitness = GenericFitnessCalculator(results, ss => ss.X, targetX, accuracy);
+            var verticalFitness = GenericFitnessCalculator(results, ss => ss.Y, targetY, accuracy);
+
+            if (horizontalFitness <= 0 || verticalFitness <= 0) return 20;
+            if (horizontalFitness <= 10 || verticalFitness <= 10) return 30;
+            if (horizontalFitness <= 20 || verticalFitness <= 20) return 40;
+
+            return (horizontalFitness + verticalFitness) / 2;
         }
 
         private static int GenericFitnessCalculator(IList<SystemState> results, Func<SystemState, double> dataTransform, double targetValue, double accuracy)
@@ -148,7 +130,7 @@ namespace GeneticControllerOptimiser.Classes
             }
             else
             {
-                var speed = 1000 - results.IndexOf(results.First(s =>
+                var speed = 1500 - results.IndexOf(results.First(s =>
                 {
                     var currentIndex = results.IndexOf(s);
                     return data.Skip(currentIndex + 1).All(r => r > targetValue * (1 - accuracy) && r < targetValue * (1 + accuracy));
