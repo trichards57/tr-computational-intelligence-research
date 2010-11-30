@@ -20,21 +20,14 @@ namespace GeneticControllerOptimiser
             Console.WriteLine("#############################################################################\n");
 
             var genomeCount = 1000;
-            var targetAngle = Math.PI / 4;
             var targetY = 20.0;
             var targetX = 20.0;
             var minusTargetY = -targetY;
             var minusTargetX = -targetX;
-            var mutationRate = 0.75;
-            var angleCycleCount = 500;
-            var verticalCycleCount = 500;
-            var horizontalCycleCount = 1000;
-            var angleFitness = 960;
-            var verticalFitness = 900;
-            var horizontalFitness = 860;
-            var angleAccuracy = 0.01;
-            var verticalAccuracy = 0.05;
-            var horizontalAccuracy = 0.1;
+            var mutationRate = 0.5;
+            var cycleCount = 5000;
+            var targetFitness = 860;
+            var accuracy = 0.01;
 
             var processedArguments = args.Select(item =>
             {
@@ -60,9 +53,6 @@ namespace GeneticControllerOptimiser
                     case "/g":
                         genomeCount = a.Value;
                         break;
-                    case "/ta":
-                        targetAngle = a.DoubleValue;
-                        break;
                     case "/tx":
                         targetX = a.DoubleValue;
                         minusTargetX = -targetX;
@@ -74,33 +64,6 @@ namespace GeneticControllerOptimiser
                     case "/mr":
                         mutationRate = a.DoubleValue;
                         break;
-                    case "/acc":
-                        angleCycleCount = a.Value;
-                        break;
-                    case "/hcc":
-                        horizontalCycleCount = a.Value;
-                        break;
-                    case "/vcc":
-                        verticalCycleCount = a.Value;
-                        break;
-                    case "/af":
-                        angleFitness = a.Value;
-                        break;
-                    case "/vf":
-                        verticalFitness = a.Value;
-                        break;
-                    case "/hf":
-                        horizontalFitness = a.Value;
-                        break;
-                    case "/aa":
-                        angleAccuracy = a.DoubleValue;
-                        break;
-                    case "/va":
-                        verticalAccuracy = a.DoubleValue;
-                        break;
-                    case "/ha":
-                        horizontalAccuracy = a.DoubleValue;
-                        break;
                     default:
                         Console.WriteLine("Unknown Parameter : {0}", a.ParamLabel);
                         WriteInstructions();
@@ -109,28 +72,19 @@ namespace GeneticControllerOptimiser
             }
 
             Console.WriteLine("Genome Count           : {0}", genomeCount);
-            Console.WriteLine("Target Angle           : {0}", targetAngle);
             Console.WriteLine("Target X               : {0}", targetX);
             Console.WriteLine("Target Y               : {0}", targetY);
             Console.WriteLine("Mutation Rate          : {0}", mutationRate);
-            Console.WriteLine("Angle Cycle Count      : {0}", angleCycleCount);
-            Console.WriteLine("Horizontal Cycle Count : {0}", horizontalCycleCount);
-            Console.WriteLine("Vertical Cycle Count   : {0}", verticalCycleCount);
-            Console.WriteLine("Angle Accuracy         : {0}", angleAccuracy);
-            Console.WriteLine("Vertical Accuracy      : {0}", verticalAccuracy);
-            Console.WriteLine("Horizontal Accuracy    : {0}", horizontalAccuracy);
-            Console.WriteLine("Angle Fitness          : {0}", angleFitness);
-            Console.WriteLine("Vertical Fitness       : {0}", verticalFitness);
-            Console.WriteLine("Horizontal Fitness     : {0}", horizontalFitness);
+            Console.WriteLine("Cycle Count            : {0}", cycleCount);
             Console.WriteLine();
 
-            Console.WriteLine("Optimising angle control...");
+            Console.WriteLine("Controller...");
             var genomeBag = new ConcurrentBag<List<double>>();
 
             Parallel.For(0, genomeCount, i =>
                 {
                     var genome = new List<double>();
-                    for (var j = 0; j < 16; j++)
+                    for (var j = 0; j < 8; j++)
                         genome.Add(Population.NewGene());
                     genomeBag.Add(genome);
                 });
@@ -145,70 +99,12 @@ namespace GeneticControllerOptimiser
             {
                 var results = new ConcurrentBag<PopulationMember>();
 
-                Parallel.ForEach(population, p => results.Add(p.Process(angleCycleCount, 0, 0, Math.PI - targetAngle, Population.AngleFitnessCalculator, angleAccuracy)));
-
-                population = Population.GetNew(results, mutationRate, Population.MutateAngle, out fitness, out topGenome);
-
-                GC.Collect();
-
-            } while (fitness < angleFitness);
-
-            var bestAngleGenes = topGenome.Skip(13);
-
-            genomeBag = new ConcurrentBag<List<double>>();
-
-            Parallel.For(0, genomeCount, i =>
-            {
-                var genome = new List<double>();
-                for (var j = 0; j < 13; j++)
-                    genome.Add(Population.NewGene());
-                genome.AddRange(bestAngleGenes);
-                genomeBag.Add(genome);
-            });
-
-            population = Population.Create(genomeBag, false, Math.PI);
-
-            Console.WriteLine("Optimising vertical control...");
-
-            do
-            {
-                var results = new ConcurrentBag<PopulationMember>();
-
-                Parallel.ForEach(population, p => results.Add(p.Process(verticalCycleCount, 0, targetY, Math.PI, Population.VerticalFitnessCalculator, verticalAccuracy, true, 0, minusTargetY, Math.PI)));
-
-                population = Population.GetNew(results, mutationRate, Population.MutateYControl, out fitness, out topGenome, p => (p.Fitness + p.NegativeFitness) / 2, false, Math.PI);
+                Parallel.ForEach(population, p => results.Add(p.Process(cycleCount, targetX, targetY, Math.PI, Population.FitnessCalculator, accuracy)));
+                population = Population.GetNew(results, mutationRate, Population.Mutate, out fitness, out topGenome);
 
                 GC.Collect();
-            } while (fitness < verticalFitness);
 
-            var bestYGenes = topGenome.Skip(6).Take(7);
-
-            genomeBag = new ConcurrentBag<List<double>>();
-
-            Parallel.For(0, genomeCount, i =>
-            {
-                var genome = new List<double>();
-                for (var j = 0; j < 6; j++)
-                    genome.Add(Population.NewGene());
-                genome.AddRange(bestYGenes);
-                genome.AddRange(bestAngleGenes);
-                genomeBag.Add(genome);
-            });
-
-            population = Population.Create(genomeBag, false, Math.PI);
-
-            Console.WriteLine("Optimising horizontal control...");
-
-            do
-            {
-                var results = new ConcurrentBag<PopulationMember>();
-
-                Parallel.ForEach(population, p => results.Add(p.Process(horizontalCycleCount, targetX, 0, Math.PI, Population.HorizontalFitnessCalculator, horizontalAccuracy, true, minusTargetX, 0, Math.PI)));
-
-                population = Population.GetNew(results, mutationRate, Population.MutateXControl, out fitness, out topGenome, p => (p.Fitness + p.NegativeFitness) / 2, false, Math.PI);
-
-                GC.Collect();
-            } while (fitness < horizontalFitness);
+            } while (!Console.KeyAvailable);
 
             Console.WriteLine("Writing genome data file.");
             using (var file = new StreamWriter(File.OpenWrite("genome.csv")))

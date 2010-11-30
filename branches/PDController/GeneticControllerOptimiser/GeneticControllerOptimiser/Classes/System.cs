@@ -20,6 +20,11 @@ namespace GeneticControllerOptimiser.Classes
 
         public bool DisableGravity { get; set; }
 
+        public System()
+        {
+            Angle = Math.PI;
+        }
+
         public SystemState Process(ThrusterState state)
         {
             state.Limit();
