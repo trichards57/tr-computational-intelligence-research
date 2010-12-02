@@ -25,13 +25,13 @@ DOXYFILE_ENCODING      = UTF-8
 # The PROJECT_NAME tag is a single word (or a sequence of words surrounded 
 # by quotes) that should identify the project.
 
-PROJECT_NAME           = "CI Coursework"
+PROJECT_NAME           = "Computational Intelligence Coursework"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. 
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = 1.0
+PROJECT_NUMBER         = "Pod Simulation Project"
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) 
 # base path where the generated documentation will be put. 
@@ -189,7 +189,12 @@ TAB_SIZE               = 4
 # will result in a user-defined paragraph with heading "Side Effects:". 
 # You can put \n's in the value part of an alias to insert newlines.
 
-ALIASES                = "stateMachineVar=State machine variable indicating that the personality has"
+ALIASES                = "controllerProcess=Performs the processing that transforms the current state into a set of thruster instructions." \
+                         "sensorParam=@param sensor A list of @ref Sensor objects." \
+                         "selfParam=@param self The object pointer." \
+                         "stateParam=@param state The current state of the pod." \
+                         "timestepParam=@param dt The timestep used by the simulator." \
+                         "navigatorProcess=Performs the processing that transforms the current state into a set of target coordinates."
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C 
 # sources only. Doxygen will then generate output that is more tailored for C. 
@@ -1187,7 +1192,7 @@ EXTRA_PACKAGES         = amsmath
 # the first chapter. If it is left blank doxygen will generate a 
 # standard header. Notice: only use this tag if you know what you are doing!
 
-LATEX_HEADER           = 
+LATEX_HEADER           = docSource/header.tex
 
 # If the PDF_HYPERLINKS tag is set to YES, the LaTeX that is generated 
 # is prepared for conversion to pdf (using ps2pdf). The pdf file will 

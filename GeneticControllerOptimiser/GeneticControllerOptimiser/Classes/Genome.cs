@@ -7,8 +7,8 @@ namespace GeneticControllerOptimiser.Classes
 {
     class Genome : List<double>, IEquatable<Genome>
     {
-        private static ulong idCount = 0;
-        private ulong ID = idCount++;
+        private static ulong idCount;
+        private readonly ulong id = idCount++;
 
         public static double NewGene()
         {
@@ -17,7 +17,7 @@ namespace GeneticControllerOptimiser.Classes
 
         public bool Equals(Genome other)
         {
-            if (ID != other.ID)
+            if (id != other.id)
                 return false;
             if (other.Count != Count) return false;
             for (var i = 0; i < Count; i++)
