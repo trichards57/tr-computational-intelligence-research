@@ -38,7 +38,7 @@ namespace GeneticControllerOptimiser.Classes
             {
 
                 BigXSpeed = genome[0] + 50, // Must be positive
-                MidXSpeed = genome[1] + 50, // Must be positive
+                MidXSpeed = genome[1] + 50,  // Must be positive
                 SmlXSpeed = genome[2] + 50, // Must be positive
                 BigXError = genome[3] + 50, // Must be positive
                 MidXError = genome[4] + 50, // Must be positive
