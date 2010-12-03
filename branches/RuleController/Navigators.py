@@ -38,6 +38,7 @@ class KeyboardCoordinateNavigator:
     # @sensorParam Unused
     # @stateParam Unused
     # @timestepParam Unused
+    # @return A tuple of (targetX, targetY)
     #
     # Each arrow key press causes the navigator's target to move in the
     # direction specified by 10px.
@@ -95,6 +96,7 @@ class RouteNavigator:
     # @sensorParam Unused
     # @stateParam
     # @timestepParam Unused
+    # @return A tuple of (targetX, targetY)
     #
     # The navigator returns the current coordinate, unless it is currently within
     # 20px of that coordinate.  In this case, the navigator moves to the next

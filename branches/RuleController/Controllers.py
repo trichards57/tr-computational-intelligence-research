@@ -17,7 +17,7 @@ from simulation import Control
 #
 # This controller controls the pod's thrusters based on a set of discrete rules
 # that control the pod's angle, speed and position relative to the
-# @ref state.target_x and @ref state.target_y attributes.  An attempt to
+# state.target_x and state.target_y attributes.  An attempt to
 # optimise the rules has been made using a genetic alogorithm.
 class TestRuleController:
     ## Initialises the controller's rule attributes to the required values.
@@ -72,6 +72,7 @@ class TestRuleController:
     # @sensorParam Unused.
     # @stateParam
     # @timestepParam Unused.
+    # @return A control object that describes how the thrusters should be fired.
     #
     # The algorithm works as follows:
     #
@@ -143,7 +144,7 @@ class TestRuleController:
 #
 # This controller controls the pod's thrusters based on a set of discrete rules
 # that control the pod's angle, speed and position relative to the
-# @ref state.target_x and @ref state.target_y attributes.
+# state.target_x and state.target_y attributes.
 class RuleController:
     ## Initialises the controller's rule attributes to the required values.
     #
@@ -197,6 +198,7 @@ class RuleController:
     # @sensorParam Unused.
     # @stateParam
     # @timestepParam Unused.
+    # @return A control object that describes how the thrusters should be fired.
     #
     # The algorithm works as follows:
     #
@@ -299,6 +301,7 @@ class PDController:
     # @sensorParam Unused.
     # @stateParam
     # @timestepParam Unused.
+    # @return A control object that describes how the thrusters should be fired.
     #
     # The following equations are used:
     #
