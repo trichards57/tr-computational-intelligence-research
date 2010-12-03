@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -8,11 +10,42 @@ using MultiAgentLibrary;
 
 namespace MultiAgentConsole
 {
-    using System.Diagnostics;
-    using System.Collections.Generic;
-
+    /// <summary>
+    /// The main class that runs when the program starts.
+    /// </summary>
     class Program
     {
+        /// <summary>
+        /// The main routine of the program
+        /// </summary>
+        /// <param name="args">The program's command line arguments.</param>
+        /// <returns>An integer, where:
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>0 - Success</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>1 - Command Line Argument Error</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>2 - Data File Not Found</description>
+        ///         </item>
+        ///     </list>
+        /// </returns>
+        /// <remarks>
+        /// This function runs all of the multi-agent processing.
+        /// 
+        /// First, the function processes the command line arguments, allowing the program settings
+        /// to be changed without recompiling.  It then loads the specified data file in to a 
+        /// <see cref="Field"/>, intialises the field with the number of starting agents, and then
+        /// runs the simulation for the specified number of cycles.  If the program is compiled with
+        /// the MOVIE preprocessor variable set, it will also output a bitmap every ten cycles to
+        /// show what is happening.
+        /// 
+        /// When the system is finished, it outputs a bitmap to output.gif, and the shortest route
+        /// that was found is output to route.csv.  This route is processed to remove any points
+        /// that do not add to the route (i.e. the route is expressed with the minimum number of points).
+        /// </remarks>
         static int Main(string[] args)
         {
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
@@ -199,6 +232,10 @@ namespace MultiAgentConsole
             return 0;
         }
 
+        /// <summary>
+        /// Writes instructions to the command line which explain all of the command line switches available
+        /// to modifiy the data.  It then pauses at the end of the output until the user presses enter.
+        /// </summary>
         static void WriteInstructions()
         {
             Console.WriteLine("Command Line Usage : ");
