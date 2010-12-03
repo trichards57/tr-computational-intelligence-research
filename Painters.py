@@ -1,3 +1,12 @@
+## @package Navigators
+# This module contains all of the navigators used to translate current sensor
+# and state data in to target coordinates.
+#
+# A navigator must implement the following function:
+#
+# process(self, sensor, state, dt)
+#
+# This function returns a tuple such that: (targetX, targetY)
 import pygame
 
 class TargetCoordinatePainter:
