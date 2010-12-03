@@ -55,6 +55,7 @@ class MainController:
     # @sensorParam
     # @stateParam
     # @timestepParam
+    # @return A control object that describes how the thrusters should be fired.
     #
     # This controller passes the sensor, state and dt parameters to each selected
     # module in turn.

@@ -190,11 +190,11 @@ TAB_SIZE               = 4
 # You can put \n's in the value part of an alias to insert newlines.
 
 ALIASES                = "controllerProcess=Performs the processing that transforms the current state into a set of thruster instructions." \
-                         "sensorParam=@param sensor A list of @ref Sensor objects." \
                          "selfParam=@param self The object pointer." \
                          "stateParam=@param state The current state of the pod." \
                          "timestepParam=@param dt The timestep used by the simulator." \
-                         "navigatorProcess=Performs the processing that transforms the current state into a set of target coordinates."
+                         "navigatorProcess=Performs the processing that transforms the current state into a set of target coordinates." \
+                         "sensorParam=@param sensor A list of Sensor objects."
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C 
 # sources only. Doxygen will then generate output that is more tailored for C. 
@@ -655,7 +655,7 @@ RECURSIVE              = NO
 # excluded from the INPUT source files. This way you can easily exclude a 
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = 
+EXCLUDE                = simulation.py
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or 
 # directories that are symbolic links (a Unix filesystem feature) are excluded 
@@ -1129,7 +1129,7 @@ MATHJAX_RELPATH        = http://www.mathjax.org/mathjax
 # typically be disabled. For large projects the javascript based search engine 
 # can be slow, then enabling SERVER_BASED_SEARCH may provide a better solution.
 
-SEARCHENGINE           = YES
+SEARCHENGINE           = NO
 
 # When the SERVER_BASED_SEARCH tag is enabled the search engine will be 
 # implemented using a PHP enabled web server instead of at the web client 
@@ -1192,7 +1192,7 @@ EXTRA_PACKAGES         = amsmath
 # the first chapter. If it is left blank doxygen will generate a 
 # standard header. Notice: only use this tag if you know what you are doing!
 
-LATEX_HEADER           = docSource/header.tex
+LATEX_HEADER           = 
 
 # If the PDF_HYPERLINKS tag is set to YES, the LaTeX that is generated 
 # is prepared for conversion to pdf (using ps2pdf). The pdf file will 
