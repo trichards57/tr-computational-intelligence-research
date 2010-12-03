@@ -64,7 +64,7 @@ class TestRuleController:
         self.down_force = 0.0
 
         ## The angle the controller aims for to move the pod sidewise
-        self.propel_angle = 0.2
+        self.propel_angle = 0.1
 
     ## @controllerProcess
     #
