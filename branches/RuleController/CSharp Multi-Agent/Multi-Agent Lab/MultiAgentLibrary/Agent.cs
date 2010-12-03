@@ -4,20 +4,47 @@ using System.Drawing;
 
 namespace MultiAgentLibrary
 {
+    /// <summary>
+    /// Represents an agent that moves through the environment.
+    /// </summary>
     public class Agent
     {
+        /// <summary>
+        /// The position the agent starts at in the environment, and where it returns to when it
+        /// has found the end.
+        /// </summary>
         private readonly Point startPosition;
 
+        /// <summary>
+        /// Gets or sets the current position of the agent.
+        /// </summary>
+        /// <value>The position of the agent.</value>
         public Point Position { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the agent has found the destination.
+        /// </summary>
+        /// <value><c>true</c> if it has found the end; otherwise, <c>false</c>.</value>
         public bool FoundEnd { get; set; }
 
+        /// <summary>
+        /// Gets or sets the length of the Agent's short term memory.
+        /// </summary>
+        /// <value>The length of the Agent's term memory.</value>
         public int ShortTermMemoryLength { get; set; }
 
+        /// <summary>
+        /// A list containing all the points on the Agent's route.
+        /// </summary>
         private readonly List<Point> pastRoute = new List<Point>();
 
         private readonly Random rand = new Random();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Agent"/> class.
+        /// </summary>
+        /// <param name="startPosition">The agent's start position.</param>
+        /// <param name="memoryLength">Length of the agent's short-term memory.</param>
         public Agent(Point startPosition, int memoryLength)
         {
             Position = startPosition;
@@ -26,6 +53,19 @@ namespace MultiAgentLibrary
             FoundEnd = false;
         }
 
+        /// <summary>
+        /// Triggers the agent to make a movement through the field in <paramref name="field"/>.
+        /// </summary>
+        /// <param name="field">The field the agent is currently in.</param>
+        /// <remarks>
+        /// The agent decides which way to move based on the level of pheremone in the squares.
+        /// The square receives a heavy penality if it has been visited during the agent's
+        /// short term memory.
+        /// 
+        /// The agent assumes that the outside border locations of the field are outside the maze.  
+        /// Therefore, if it finds itself in these locations, it assumes it has somehow left the
+        /// maze and resets itself back to the start.
+        /// </remarks>
         public void Process(Field field)
         {
             var x = Position.X;
@@ -115,6 +155,16 @@ namespace MultiAgentLibrary
             }
         }
 
+        /// <summary>
+        /// Adds the next point to the remembered the route.
+        /// </summary>
+        /// <param name="currentSquare">The point to add.</param>
+        /// <remarks>
+        /// If the point has never been visited before, this routine just adds it to the list.
+        /// If the point has already been visited, the routine assumes that the agent has just
+        /// gone through a loop.  All of the points stored during that loop are removed, smoothing
+        /// the path out a little.
+        /// </remarks>
         private void RememberRoute(Point currentSquare)
         {
             if (pastRoute.Contains(currentSquare))
