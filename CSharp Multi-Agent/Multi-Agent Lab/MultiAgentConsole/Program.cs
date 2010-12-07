@@ -8,6 +8,9 @@ using System.Linq;
 using System.Reflection;
 using MultiAgentLibrary;
 
+/// @package MultiAgentConsole
+/// @brief Contains the Multi-Agent Route Finder program
+
 namespace MultiAgentConsole
 {
     /// <summary>

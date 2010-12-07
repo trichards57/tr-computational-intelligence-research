@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using GeneticControllerOptimiser.Classes;
 
+/// @package GeneticControllerOptimiser
+/// @brief Contains the <see cref="Program" /> class that runs the genetic controller optimiser.
+
 namespace GeneticControllerOptimiser
 {
     using System.Globalization;
@@ -11,8 +14,37 @@ namespace GeneticControllerOptimiser
     using System.Threading.Tasks;
     using System.Collections.Concurrent;
 
+    /// <summary>
+    /// The main class that runs when the program starts.
+    /// </summary>
     class Program
     {
+        /// <summary>
+        /// The main routine of the program. 
+        /// </summary>
+        /// <param name="args">The program's command line arguments.</param>
+        /// <returns>
+        /// An integer, where:
+        /// - 0 - Success
+        /// - 1 - Command Line Argument Error
+        /// </returns>
+        /// <remarks>
+        /// This program runs all of the genetic algorithm.
+        /// 
+        /// First, the program processes the command line arguments, allowing the program 
+        /// settings to be changed without recompiling. The algorithm then optimises the
+        /// controller based on a set of fitness functions.  It divides the controller in to
+        /// three segments, and processes them in this order
+        /// 
+        /// -# Angle Control
+        /// -# Vertical Control
+        /// -# Horizontal Control
+        /// 
+        /// This is done because good horizontal control first requires good angle and vertical
+        /// control to be successful.  This also simplifies the fitness functions as only one
+        /// main parameter needs to be checked at a time.  The final genome is output to the file
+        /// genome.csv.
+        /// </remarks>
         static int Main(string[] args)
         {
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
@@ -228,6 +260,12 @@ namespace GeneticControllerOptimiser
             return 0;
         }
 
+        /// <summary>
+        /// Writes to the command line instructions on using the program.
+        /// </summary>
+        /// <remarks>
+        /// This command pauses until the user hits enter.
+        /// </remarks>
         private static void WriteInstructions()
         {
             Console.WriteLine("Command Line Usage : ");
