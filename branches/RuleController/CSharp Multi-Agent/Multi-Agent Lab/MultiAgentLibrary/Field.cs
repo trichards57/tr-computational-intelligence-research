@@ -10,12 +10,26 @@ namespace MultiAgentLibrary
     using System.Threading.Tasks;
     using System.Globalization;
 
+    /// <summary>
+    /// Represents the environment that agents move through.
+    /// </summary>
     public class Field
     {
+        /// <summary>
+        /// Gets or sets the point where agents start, and where they return after completing the maze.
+        /// </summary>
+        /// <value>The agent start point.</value>
         public Point StartPoint { get; set; }
 
+        /// <summary>
+        /// The backing field for the <see cref="AgentsList"/> property.
+        /// </summary>
         private readonly List<Agent> agentsList;
 
+        /// <summary>
+        /// The list of agents used present in the Field.
+        /// </summary>
+        /// <value>The agents list.</value>
         public Collection<Agent> AgentsList
         {
             get
@@ -24,8 +38,15 @@ namespace MultiAgentLibrary
             }
         }
 
+        /// <summary>
+        /// The backing field for the <see cref="OriginalRoute"/> property.
+        /// </summary>
         private readonly List<Point> originalRoute;
 
+        /// <summary>
+        /// Gets the route the original mapping run followed.
+        /// </summary>
+        /// <value>The original route followed by the pod.</value>
         public ReadOnlyCollection<Point> OriginalRoute
         {
             get
@@ -34,8 +55,17 @@ namespace MultiAgentLibrary
             }
         }
 
+        /// <summary>
+        /// Backing field for the <see cref="ShortestRoute"/> property.
+        /// </summary>
         private readonly List<Point> shortestRoute;
 
+        /// <summary>
+        /// Gets the shortest route produced by the agents.
+        /// </summary>
+        /// <value>The shortest route.</value>
+        /// <remarks>Updated every cycle, whenever an agent completes the route.  Measured by the number
+        /// of points in the route.</remarks>
         public Collection<Point> ShortestRoute
         {
             get
@@ -44,7 +74,14 @@ namespace MultiAgentLibrary
             }
         }
 
+        /// <summary>
+        /// Backing field for the <see cref="Squares"/> property.
+        /// </summary>
         private readonly FieldSquare[] squares;
+        /// <summary>
+        /// Gets all of the squares that make up the environment.
+        /// </summary>
+        /// <value>The environment's squares.</value>
         public ReadOnlyCollection<FieldSquare> Squares
         {
             get
@@ -53,14 +90,36 @@ namespace MultiAgentLibrary
             }
         }
 
+        /// <summary>
+        /// Gets or sets the width of the environment.
+        /// </summary>
+        /// <value>The width of the environment in squares.</value>
         public int Width { get; set; }
 
+        /// <summary>
+        /// Gets or sets the height of the environment.
+        /// </summary>
+        /// <value>The height of the environment in squares.</value>
         public int Height { get; set; }
 
+        /// <summary>
+        /// Gets or sets the size of each square relative to the original map.
+        /// </summary>
+        /// <value>The size of the square in pixels.</value>
         public SizeF SquareSize { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Field"/> class, as a square with side length <paramref name="width"/>.
+        /// </summary>
+        /// <param name="width">The width of the square.</param>
         public Field(int width) : this(width, width) { }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Field"/> class with the given <paramref name="width"/> and <paramref name="height"/>.
+        /// </summary>
+        /// <param name="width">The width of the environment.</param>
+        /// <param name="height">The height of the environment.</param>
+        /// <remarks>Generates an empty environment, <paramref name="width"/> squares across and <paramref name="height"/> squares down.</remarks>
         public Field(int width, int height)
         {
             agentsList = new List<Agent>();
@@ -79,6 +138,36 @@ namespace MultiAgentLibrary
             Height = height;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Field"/> class, with the given <paramref name="width"/> and
+        /// <paramref name="height"/>, based on the given sensor data file.
+        /// </summary>
+        /// <param name="width">The width of the environment.</param>
+        /// <param name="height">The height of the environment.</param>
+        /// <param name="fileName">Name of the file containing sensor information.</param>
+        /// <remarks>
+        /// Loads the specified sensor data in <paramref name="fileName"/>.  Each row consists of an origin
+        /// point, followed by a comma seperated list of ang, range and state information, producing a 
+        /// results like:
+        /// 
+        /// <c>
+        /// x,y,sensor0ang,sensor0val,sensor0state,sensor1ang,sensor1val,sensor1state,...,sensor39ang,sensor39val,sensor39state
+        /// x,y,sensor0ang,sensor0val,sensor0state,sensor1ang,sensor1val,sensor1state,...,sensor39ang,sensor39val,sensor39state
+        /// </c>
+        /// 
+        /// This is parsed in to a list of readings consisting of a starting point, a range, an angle and what the 
+        /// sensor has read.  This is then converted in to a list of points and what was at them (e.g. a wall, the destination
+        /// or nothing (the sensor didn't pick anything up in range)).  
+        /// 
+        /// The resulting map produced is then divided in to a grid with given <paramref name="width"/> and 
+        /// <paramref name="height"/>.  If a square contains a point that reads as a destination, the entire
+        /// square becomes a destination.  Otherwise, if the square contains a point that reads as a wall,
+        /// the entire square becomes a wall.  The square is only considered passable if all of the points that
+        /// fall inside of it are passable.  This produced a representation of the environment that has lower
+        /// resolution, but also consumes less memory and is faster to process.
+        /// 
+        /// As far as possible, this process is operated in parallel to speed up processing.
+        /// </remarks>
         public Field(int width, int height, string fileName)
             : this(width, height)
         {
@@ -172,6 +261,18 @@ namespace MultiAgentLibrary
                 });
         }
 
+        /// <summary>
+        /// Runs every agent and square through one cycle.
+        /// </summary>
+        /// <remarks>
+        /// Triggers each agent to run it's <see cref="Agent::Process"/> function.  This is done in parallel,
+        /// and so the order that each agent will be processed in is not defined.  The behaviour of each agent
+        /// can be and is affected by the behaviour of those that have already been processed.  This is intentional.
+        /// 
+        /// Once all of the agents have been processed, the pheremone level of each square is reduced by 
+        /// <see cref="FieldSquare::PheromoneDecayRate"/>, provided the pheremone level is above 1 and the square is
+        /// not a wall or a destination.  This is executed in parallel where possible, but this has no side-effects.
+        /// </remarks>
         public void CycleAgents()
         {
             Parallel.ForEach(AgentsList, agent => agent.Process(this));

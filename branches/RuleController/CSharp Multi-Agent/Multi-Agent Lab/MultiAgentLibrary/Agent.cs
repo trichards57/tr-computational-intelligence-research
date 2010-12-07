@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 
+/// @package MultiAgentLibrary
+/// @brief Contains all the classes used by the Multi-Agent Route Finder
+
 namespace MultiAgentLibrary
 {
     /// <summary>
@@ -28,16 +31,19 @@ namespace MultiAgentLibrary
         public bool FoundEnd { get; set; }
 
         /// <summary>
-        /// Gets or sets the length of the Agent's short term memory.
+        /// Gets or sets the length of the agent's short term memory.
         /// </summary>
-        /// <value>The length of the Agent's term memory.</value>
+        /// <value>The length of the agent's term memory.</value>
         public int ShortTermMemoryLength { get; set; }
 
         /// <summary>
-        /// A list containing all the points on the Agent's route.
+        /// A list containing all the points on the agent's route.
         /// </summary>
         private readonly List<Point> pastRoute = new List<Point>();
 
+        /// <summary>
+        /// The random number generator used for this agent.
+        /// </summary>
         private readonly Random rand = new Random();
 
         /// <summary>

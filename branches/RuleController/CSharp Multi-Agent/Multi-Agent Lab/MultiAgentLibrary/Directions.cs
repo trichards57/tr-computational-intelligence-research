@@ -1,7 +1,7 @@
 ﻿namespace MultiAgentLibrary
 {
     /// <summary>
-    /// Enumeration used to represent a direction the pod can move in.
+    /// Used to represent a direction the pod can move in.
     /// </summary>
     public enum Direction
     {
