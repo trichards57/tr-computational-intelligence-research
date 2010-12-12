@@ -121,8 +121,8 @@ namespace GeneticControllerOptimiser.Classes
         /// <param name="minusTargetAngle">The negative target angle.</param>
         /// <returns>A list containing the genome and the fitness of the system in each tested direction.</returns>
         /// <remarks>
-        /// The simulation is run by calling <see cref="Controller::Process"/>, and then <see cref="System::Process"/>
-        /// in turn.  If the <see cref="GeneticControllerOptimiser::Classes::System"/> detects that the 
+        /// The simulation is run by calling <see cref="Classes.Controller.Process" />, and then <see cref="Classes.System.Process"/>
+        /// in turn.  If the <see cref="Classes.System"/> detects that the 
         /// pod has overshot, the processing finishes early.  This is permitted because the fitness function
         /// does not require any more information to calculate the fitness.
         /// 
@@ -143,7 +143,7 @@ namespace GeneticControllerOptimiser.Classes
             }
 
             var systemState = new SystemState();
-            var targetState = new TargetState() { TargetX = targetX, TargetY = targetY, TargetAngle = targetAngle };
+            var targetState = new TargetState { TargetX = targetX, TargetY = targetY, TargetAngle = targetAngle };
 
             if (targetVariable.HasFlag(TargetVariables.Angle))
                 targetState.AngleCutOff = targetAngle * 1.18;
@@ -172,7 +172,7 @@ namespace GeneticControllerOptimiser.Classes
             {
                 var negSystemState = new SystemState();
                 var negResult = new List<SystemState>();
-                var negTargetState = new TargetState() { TargetAngle = minusTargetAngle, TargetX = minusTargetX, TargetY = minusTargetY };
+                var negTargetState = new TargetState { TargetAngle = minusTargetAngle, TargetX = minusTargetX, TargetY = minusTargetY };
                 if (targetVariable.HasFlag(TargetVariables.Angle))
                     targetState.AngleCutOff = Math.Abs(minusTargetAngle) * 1.18;
                 if (targetVariable.HasFlag(TargetVariables.Vertical))
@@ -195,7 +195,7 @@ namespace GeneticControllerOptimiser.Classes
 
             lock (PastResults)
             {
-                PastResults.Add(Genome, new SystemResults() { Fitness = output.Fitness, NegativeFitness = output.NegativeFitness });
+                PastResults.Add(Genome, new SystemResults { Fitness = output.Fitness, NegativeFitness = output.NegativeFitness });
             }
 
             return output;

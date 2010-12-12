@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace GeneticControllerOptimiser.Classes
+﻿namespace GeneticControllerOptimiser.Classes
 {
     /// <summary>
     /// Represents the results achieved by a specific genome.

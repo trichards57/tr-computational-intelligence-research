@@ -121,7 +121,7 @@ namespace GeneticControllerOptimiser.Classes
         /// At present, <see cref="PropelAngle"/>, <see cref="UpForce"/> and <see cref="DownForce"/>
         /// are fixed and the associated genes are ignored.
         /// </returns>
-        /// <exception cref="ArgumentExcetion">Thrown if the genome provided is not 16 genes long.</exception>
+        /// <exception cref="ArgumentException">Thrown if the genome provided is not 16 genes long.</exception>
         public static Controller FromGenome(Genome genome)
         {
             if (genome.Count != 16)
@@ -164,7 +164,7 @@ namespace GeneticControllerOptimiser.Classes
         /// <param name="targetAngle">The target angle. Should be set to the angle that points the pod straight up in environment units (not normalised units).</param>
         /// <returns>A set of thruster instructions to control the system.</returns>
         /// <remarks>
-        /// The controller operates in the same way as the <see cref="Controllers::RuleController"/>.
+        /// The controller operates in the same way as the <see cref="Controllers.RuleController"/>.
         /// </remarks>
         public ThrusterState Process(SystemState state, double targetX, double targetY, double targetAngle)
         {
@@ -214,7 +214,7 @@ namespace GeneticControllerOptimiser.Classes
 
             AngleErrorIntegral += angError;
 
-            var sideForce = (angError * AngleProportionalGain + state.DAngleDt * AngleIntegralGain + AngleErrorIntegral * AngleIntegralGain);
+            var sideForce = (angError * AngleProportionalGain + state.DAngleDt * AngleDifferentialGain + AngleErrorIntegral * AngleIntegralGain);
 
             if (sideForce > 0)
             {

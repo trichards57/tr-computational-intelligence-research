@@ -197,7 +197,7 @@ namespace GeneticControllerOptimiser.Classes
         /// </item>
         /// </list>
         /// </returns>
-        private static int GenericFitnessCalculator(IList<SystemState> results, Func<SystemState, double> dataTransform, double targetValue, double accuracy)
+        private static int GenericFitnessCalculator(IEnumerable<SystemState> results, Func<SystemState, double> dataTransform, double targetValue, double accuracy)
         {
             int fitness;
 
@@ -234,11 +234,9 @@ namespace GeneticControllerOptimiser.Classes
                 fitness = 1000;
                 for (var i = data.Count - 1; i >= 0; i--)
                 {
-                    if (data[i] > targetValue * (1 + accuracy) || data[i] < targetValue * (1 - accuracy))
-                    {
-                        fitness = 1000  + (data.Count - i);
-                        break;
-                    }
+                    if (data[i] <= targetValue * (1 + accuracy) && data[i] >= targetValue * (1 - accuracy)) continue;
+                    fitness = 1000  + (data.Count - i);
+                    break;
                 }
             }
 

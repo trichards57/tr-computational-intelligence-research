@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace GeneticControllerOptimiser.Classes
 {
@@ -14,7 +11,7 @@ namespace GeneticControllerOptimiser.Classes
     /// 
     /// Based on code from http://blogs.msdn.com/b/pfxteam/archive/2009/02/19/9434171.aspx.
     /// </remarks>
-    class MultiRandom
+    static class MultiRandom
     {
         /// <summary>
         /// Global random number generator used to seed the thread local generators.
@@ -30,22 +27,6 @@ namespace GeneticControllerOptimiser.Classes
         /// </remarks>
         [ThreadStatic]
         private static Random local;
-
-        /// <summary>
-        /// Returns a non-negative random number.
-        /// </summary>
-        /// <returns>A 32-bit signed integer greater than or equal to zero and less than Int32.MaxValue.</returns>
-        public static int Next()
-        {
-            var inst = local;
-            if (inst == null)
-            {
-                int seed;
-                lock (Global) seed = Global.Next();
-                local = inst = new Random(seed);
-            }
-            return inst.Next();
-        }
 
         /// <summary>
         /// Returns a random number within a specified range.
