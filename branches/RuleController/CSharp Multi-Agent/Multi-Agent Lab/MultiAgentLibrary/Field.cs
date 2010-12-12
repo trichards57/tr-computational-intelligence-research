@@ -47,7 +47,7 @@ namespace MultiAgentLibrary
         /// Gets the route the original mapping run followed.
         /// </summary>
         /// <value>The original route followed by the pod.</value>
-        public ReadOnlyCollection<Point> OriginalRoute
+        public IEnumerable<Point> OriginalRoute
         {
             get
             {
@@ -107,12 +107,6 @@ namespace MultiAgentLibrary
         /// </summary>
         /// <value>The size of the square in pixels.</value>
         public SizeF SquareSize { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Field"/> class, as a square with side length <paramref name="width"/>.
-        /// </summary>
-        /// <param name="width">The width of the square.</param>
-        public Field(int width) : this(width, width) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Field"/> class with the given <paramref name="width"/> and <paramref name="height"/>.
@@ -265,12 +259,12 @@ namespace MultiAgentLibrary
         /// Runs every agent and square through one cycle.
         /// </summary>
         /// <remarks>
-        /// Triggers each agent to run it's <see cref="Agent::Process"/> function.  This is done in parallel,
+        /// Triggers each agent to run it's <see cref="Agent.Process"/> function.  This is done in parallel,
         /// and so the order that each agent will be processed in is not defined.  The behaviour of each agent
         /// can be and is affected by the behaviour of those that have already been processed.  This is intentional.
         /// 
         /// Once all of the agents have been processed, the pheremone level of each square is reduced by 
-        /// <see cref="FieldSquare::PheromoneDecayRate"/>, provided the pheremone level is above 1 and the square is
+        /// <see cref="FieldSquare.PheromoneDecayRate"/>, provided the pheremone level is above 1 and the square is
         /// not a wall or a destination.  This is executed in parallel where possible, but this has no side-effects.
         /// </remarks>
         public void CycleAgents()
