@@ -39,23 +39,6 @@ namespace MultiAgentLibrary
         }
 
         /// <summary>
-        /// The backing field for the <see cref="OriginalRoute"/> property.
-        /// </summary>
-        private readonly List<Point> originalRoute;
-
-        /// <summary>
-        /// Gets the route the original mapping run followed.
-        /// </summary>
-        /// <value>The original route followed by the pod.</value>
-        public IEnumerable<Point> OriginalRoute
-        {
-            get
-            {
-                return new ReadOnlyCollection<Point>(originalRoute);
-            }
-        }
-
-        /// <summary>
         /// Backing field for the <see cref="ShortestRoute"/> property.
         /// </summary>
         private readonly List<Point> shortestRoute;
@@ -118,7 +101,6 @@ namespace MultiAgentLibrary
         {
             agentsList = new List<Agent>();
             squares = new FieldSquare[width * height];
-            originalRoute = new List<Point>();
             shortestRoute = new List<Point>();
 
             for (var x = 0; x < width; x++)
@@ -190,8 +172,6 @@ namespace MultiAgentLibrary
             var firstLineParts = lines.First().Split(new[] { "," }, 3, StringSplitOptions.RemoveEmptyEntries);
             var origStartPoint = new PointF(float.Parse(firstLineParts[0], CultureInfo.InvariantCulture), float.Parse(firstLineParts[1], CultureInfo.InvariantCulture));
 
-            var unscaledOriginalRoute = new List<PointF>();
-
             // Split each line up in to a list of readings, then merge them all together.
             // Don't care about order, so can be done in parallel.
 
@@ -199,8 +179,6 @@ namespace MultiAgentLibrary
                 {
                     var parts = l.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
                     var origin = new PointF(float.Parse(parts[0], CultureInfo.InvariantCulture), float.Parse(parts[1], CultureInfo.InvariantCulture));
-
-                    unscaledOriginalRoute.Add(origin);
 
                     var output = new List<SensorReading>();
 
@@ -234,8 +212,6 @@ namespace MultiAgentLibrary
 
             // Scale the starting point
             StartPoint = new Point((int)Math.Round(origStartPoint.X / xRectSize), (int)Math.Round(origStartPoint.Y / yRectSize));
-
-            originalRoute.AddRange(unscaledOriginalRoute.Select(p => new Point((int)Math.Round(p.X / xRectSize), (int)Math.Round(p.Y / yRectSize))));
 
             Parallel.ForEach(rawPoints, p =>
                 {
