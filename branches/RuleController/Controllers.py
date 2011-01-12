@@ -31,18 +31,18 @@ class TestRuleController:
         self.target_ang = 0
 
         ## The upper speed threshold in the Y direction
-        self.big_y_speed = 5.3711984797246757
+        self.big_x_speed = 5.3711984797246757
         ## The middle speed threshold in the Y direction
-        self.mid_y_speed = 0.61332760407278641
+        self.mid_x_speed = 0.61332760407278641
         ## The lower speed threshold in the Y direction
-        self.sml_y_speed = 2.9762199162394865
+        self.sml_x_speed = 2.9762199162394865
 
         ## The upper speed threshold in the X direction
-        self.mid_x_speed = 27.695826547078706
+        self.mid_y_speed = 27.695826547078706
         ## The middle speed threshold in the X direction
-        self.big_x_speed = 24.980304168993751
+        self.big_y_speed = 24.980304168993751
         ## The lower speed threshold in the X direction
-        self.sml_x_speed = 50.863729347877076
+        self.sml_y_speed = 50.863729347877076
 
         ## The upper error threshold in the X direction
         self.mid_x_error = 75.183935032777455

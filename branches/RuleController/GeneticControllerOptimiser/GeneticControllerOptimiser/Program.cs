@@ -52,17 +52,17 @@ namespace GeneticControllerOptimiser
 
             var genomeCount = 1000;
             var targetAngle = Math.PI / 4;
-            var targetY = 20.0;
-            var targetX = 20.0;
+            var targetY = 100.0;
+            var targetX = 100.0;
             var minusTargetY = -targetY;
             var minusTargetX = -targetX;
-            var mutationRate = 0.75;
+            var mutationRate = 0.9;
             var angleCycleCount = 500;
-            var verticalCycleCount = 500;
-            var horizontalCycleCount = 1000;
+            var verticalCycleCount = 3000;
+            var horizontalCycleCount = 6000;
             var angleFitness = 1460;
-            var verticalFitness = 1400;
-            var horizontalFitness = 1860;
+            var verticalFitness = 3520;
+            var horizontalFitness = 2380;
             var angleAccuracy = 0.01;
             var verticalAccuracy = 0.05;
             var horizontalAccuracy = 0.1;

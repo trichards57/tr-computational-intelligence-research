@@ -214,7 +214,7 @@ namespace GeneticControllerOptimiser.Classes
 
             AngleErrorIntegral += angError;
 
-            var sideForce = (angError * AngleProportionalGain + state.DAngleDt * AngleDifferentialGain + AngleErrorIntegral * AngleIntegralGain);
+            var sideForce = (angError * AngleProportionalGain + state.DAngleDt * AngleDifferentialGain/* + AngleErrorIntegral * AngleIntegralGain*/);
 
             if (sideForce > 0)
             {

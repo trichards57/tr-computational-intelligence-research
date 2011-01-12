@@ -9,9 +9,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("MultiAgentLibrary")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("University of Bath")]
+[assembly: AssemblyCompany("Tony Richards")]
 [assembly: AssemblyProduct("MultiAgentLibrary")]
-[assembly: AssemblyCopyright("Copyright © University of Bath 2010")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

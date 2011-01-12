@@ -65,7 +65,7 @@ namespace MultiAgentConsole
             var mapHeight = 100;
             var maxAgents = 250;
             var startAgents = 1;
-            var cycleCount = 10000;
+            var cycleCount = 40000;
             var memoryLength = 4;
 
             if (!File.Exists(args[0]))
@@ -179,10 +179,6 @@ namespace MultiAgentConsole
                     var col = square.SquareColour;
                     graphics.FillRectangle(new SolidBrush(col), square.Position.X * 10, square.Position.Y * 10, 10, 10);
                 }
-                foreach (var point in field.OriginalRoute)
-                {
-                    graphics.FillRectangle(Brushes.Magenta, point.X * 10 + 5, point.Y * 10 + 5, 5, 5);
-                }
                 foreach (var point in field.ShortestRoute)
                 {
                     graphics.FillEllipse(Brushes.Yellow, point.X * 10 + 2.5f, point.Y * 10 + 2.5f, 5.0f, 5.0f);
@@ -252,7 +248,7 @@ namespace MultiAgentConsole
             Console.WriteLine("    /sa : An integer specifying the starting number of agents for the");
             Console.WriteLine("          simulation. Default : 1");
             Console.WriteLine("    /c  : An integer specifying the number of cycles the sequence will");
-            Console.WriteLine("          run for. Default : 10000");
+            Console.WriteLine("          run for. Default : 40000");
             Console.WriteLine("    /sm : An integer specifying the length of the agent's short term route");
             Console.WriteLine("          memory, which is used to prevent back tracking. Default : 4");
             Console.WriteLine();
