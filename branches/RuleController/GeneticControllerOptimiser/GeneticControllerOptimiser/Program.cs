@@ -157,7 +157,6 @@ namespace GeneticControllerOptimiser
 
             Console.WriteLine("Optimising angle control...");
             var genomeBag = new ConcurrentBag<Genome>();
-
             Parallel.For(0, genomeCount, i =>
                 {
                     var genome = new Genome();

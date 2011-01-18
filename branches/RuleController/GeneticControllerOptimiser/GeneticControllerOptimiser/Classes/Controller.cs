@@ -14,99 +14,89 @@ namespace GeneticControllerOptimiser.Classes
         /// Gets or sets the largest Y speed threshold.
         /// </summary>
         /// <value>The largest Y speed threshold.</value>
-        public double BigYSpeed { get; set; }
+        private double BigYSpeed { get; set; }
         /// <summary>
         /// Gets or sets the middle Y speed threshold.
         /// </summary>
         /// <value>The middle Y speed threshold.</value>
-        public double MidYSpeed { get; set; }
+        private double MidYSpeed { get; set; }
         /// <summary>
         /// Gets or sets the smallest Y speed threshold.
         /// </summary>
         /// <value>The small Y speed threshold.</value>
-        public double SmlYSpeed { get; set; }
+        private double SmlYSpeed { get; set; }
         /// <summary>
         /// Gets or sets the largest X speed threshold.
         /// </summary>
         /// <value>The largest X speed threshold.</value>
-        public double BigXSpeed { get; set; }
+        private double BigXSpeed { get; set; }
         /// <summary>
         /// Gets or sets the middle X speed threshold.
         /// </summary>
         /// <value>The middle X speed threshold.</value>
-        public double MidXSpeed { get; set; }
+        private double MidXSpeed { get; set; }
         /// <summary>
         /// Gets or sets the smallest X speed threshold.
         /// </summary>
         /// <value>The small X speed threshold.</value>
-        public double SmlXSpeed { get; set; }
+        private double SmlXSpeed { get; set; }
 
         /// <summary>
         /// Gets or sets the largest X error threshold.
         /// </summary>
         /// <value>The largest X error threshold.</value>
-        public double BigXError { get; set; }
+        private double BigXError { get; set; }
         /// <summary>
         /// Gets or sets the middle X error threshold.
         /// </summary>
         /// <value>The middle X error threshold.</value>
-        public double MidXError { get; set; }
+        private double MidXError { get; set; }
 
         /// <summary>
         /// Gets or sets the largest Y error threshold.
         /// </summary>
         /// <value>The largest Y error threshold.</value>
-        public double BigYError { get; set; }
+        private double BigYError { get; set; }
         /// <summary>
         /// Gets or sets the middle Y error threshold.
         /// </summary>
         /// <value>The middle Y error treshold.</value>
-        public double MidYError { get; set; }
+        private double MidYError { get; set; }
 
         /// <summary>
         /// Gets or sets the force used to accelerate the pod up.
         /// </summary>
         /// <value>Upward propulsion force.</value>
-        public double UpForce { get; set; }
+        private double UpForce { get; set; }
         /// <summary>
         /// Gets or sets the force used to accelerate the pod down.
         /// </summary>
         /// <value>Downward propulsion force.</value>
-        public double DownForce { get; set; }
+        private double DownForce { get; set; }
 
         /// <summary>
         /// Gets or sets the angle used to accelerate the pod sidewise.
         /// </summary>
         /// <value>The horizontal movement angle.</value>
-        public double PropelAngle { get; set; }
+        private double PropelAngle { get; set; }
 
         /// <summary>
         /// Gets or sets the proportional gain for the angle controller.
         /// </summary>
         /// <value>The angle proportional gain.</value>
-        public double AngleProportionalGain { get; set; }
+        private double AngleProportionalGain { get; set; }
         /// <summary>
         /// Gets or sets the differential gain for the angle controller.
         /// </summary>
         /// <value>The angle differential gain.</value>
-        public double AngleDifferentialGain { get; set; }
-        /// <summary>
-        /// Gets or sets the integral gain for the angle controller.
-        /// </summary>
-        /// <value>The angle integral gain.</value>
-        public double AngleIntegralGain { get; set; }
+        private double AngleDifferentialGain { get; set; }
 
-        /// <summary>
-        /// Gets or sets the last side force.
-        /// </summary>
-        /// <value>The last side force.</value>
-        public double LastSideForce { get; set; }
         /// <summary>
         /// Gets or sets the angle error integral.
         /// </summary>
         /// <value>The angle error integral.</value>
         /// <remarks>Used by the angle control</remarks>
-        public double AngleErrorIntegral { get; set; }
+        private double AngleErrorIntegral { get; set; }
 
         /// <summary>
         /// Creates a controller from the given <paramref name="genome"/>.
@@ -144,7 +134,7 @@ namespace GeneticControllerOptimiser.Classes
                 DownForce = 0.0, // Set to save time
                 AngleProportionalGain = genome[13],
                 AngleDifferentialGain = genome[14],
-                AngleIntegralGain = genome[15]
+                //AngleIntegralGain = genome[15]
             };
         }
 
@@ -226,8 +216,6 @@ namespace GeneticControllerOptimiser.Classes
                 control.Left = -sideForce;
                 control.Right = 0;
             }
-
-            LastSideForce = sideForce;
 
             return control;
         }

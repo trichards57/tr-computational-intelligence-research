@@ -7,22 +7,6 @@
     class TargetState
     {
         /// <summary>
-        /// Gets or sets the target X coordinate.
-        /// </summary>
-        /// <value>The target X coordinate.</value>
-        public double TargetX { get; set; }
-        /// <summary>
-        /// Gets or sets the target Y coordinate.
-        /// </summary>
-        /// <value>The target Y coordinate.</value>
-        public double TargetY { get; set; }
-        /// <summary>
-        /// Gets or sets the target angle.
-        /// </summary>
-        /// <value>The target angle.</value>
-        public double TargetAngle { get; set; }
-
-        /// <summary>
         /// Gets or sets the X coordinate cut off.
         /// </summary>
         /// <value>The X coordinate cut off.</value>
