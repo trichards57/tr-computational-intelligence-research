@@ -45,7 +45,7 @@ namespace GeneticControllerOptimiser.Classes
         /// genomes.
         /// </summary>
         /// <value>The past results.</value>
-        public static Dictionary<Genome, SystemResults> PastResults { get; set; }
+        public static Dictionary<Genome, SystemResults> PastResults { get; private set; }
 
         /// <summary>
         /// Gets or sets the member's genome.
@@ -53,46 +53,35 @@ namespace GeneticControllerOptimiser.Classes
         /// <value>The genome.</value>
         public Genome Genome { get; set; }
         /// <summary>
-        /// Gets or sets the results from positive movement.
-        /// </summary>
-        /// <value>The results as a List.</value>
-        public List<SystemState> Results { get; set; }
-        /// <summary>
-        /// Gets or sets the results from negative movement.
-        /// </summary>
-        /// <value>The negative results as a List.</value>
-        /// <remarks>This is only populated if negative movement was attempted</remarks>
-        public List<SystemState> NegativeResults { get; set; }
-        /// <summary>
         /// Gets or sets the controller used for positive movement.
         /// </summary>
         /// <value>The controller.</value>
-        public Controller Controller { get; set; }
+        public Controller Controller { private get; set; }
         /// <summary>
         /// Gets or sets the controller used for negative movement.
         /// </summary>
         /// <value>The negative controller.</value>
-        public Controller NegativeController { get; set; }
+        public Controller NegativeController { private get; set; }
         /// <summary>
         /// Gets or sets the system used for positive movement testing.
         /// </summary>
         /// <value>The system.</value>
-        public System System { get; set; }
+        public System System { private get; set; }
         /// <summary>
         /// Gets or sets the system used for negative movement testing.
         /// </summary>
         /// <value>The negative system.</value>
-        public System NegativeSystem { get; set; }
+        public System NegativeSystem { private get; set; }
         /// <summary>
         /// Gets or sets the fitness of the positive movement.
         /// </summary>
         /// <value>An integer representing the fitness, where large numbers are better.</value>
-        public int Fitness { get; set; }
+        public int Fitness { get; private set; }
         /// <summary>
         /// Gets or sets the fitness of the negative movement.
         /// </summary>
         /// <value>An integer representing the fitness, where large numbers are better.</value>
-        public int NegativeFitness { get; set; }
+        public int NegativeFitness { get; private set; }
 
         /// <summary>
         /// Initializes the <see cref="PopulationMember"/> class.
@@ -143,7 +132,7 @@ namespace GeneticControllerOptimiser.Classes
             }
 
             var systemState = new SystemState();
-            var targetState = new TargetState { TargetX = targetX, TargetY = targetY, TargetAngle = targetAngle };
+            var targetState = new TargetState();
 
             if (targetVariable.HasFlag(TargetVariables.Angle))
                 targetState.AngleCutOff = targetAngle * 1.18;
@@ -165,14 +154,13 @@ namespace GeneticControllerOptimiser.Classes
             output.Controller = Controller;
             output.Fitness = fitnessFunction(result, targetX, targetY, Math.PI - targetAngle, accuracy);
             output.Genome = Genome;
-            output.Results = result;
             output.System = System;
 
             if (doNegative)
             {
                 var negSystemState = new SystemState();
                 var negResult = new List<SystemState>();
-                var negTargetState = new TargetState { TargetAngle = minusTargetAngle, TargetX = minusTargetX, TargetY = minusTargetY };
+                var negTargetState = new TargetState();
                 if (targetVariable.HasFlag(TargetVariables.Angle))
                     targetState.AngleCutOff = Math.Abs(minusTargetAngle) * 1.18;
                 if (targetVariable.HasFlag(TargetVariables.Vertical))
@@ -189,7 +177,6 @@ namespace GeneticControllerOptimiser.Classes
 
                 output.NegativeController = NegativeController;
                 output.NegativeFitness = fitnessFunction(negResult, minusTargetX, minusTargetY, Math.PI - minusTargetAngle, accuracy);
-                output.NegativeResults = result;
                 output.NegativeSystem = System;
             }
 
