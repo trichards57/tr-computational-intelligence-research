@@ -1,9 +1,12 @@
 ﻿namespace GeneticControllerOptimiser.Classes
 {
+    using global::System.Runtime.InteropServices;
+
     /// <summary>
     /// Represents the current state of the pod.
     /// </summary>
-    class SystemState
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    struct SystemState
     {
         /// <summary>
         /// Gets or sets the current X coordinate.
@@ -41,16 +44,5 @@
         /// </summary>
         /// <value><c>true</c> if the system overshot; otherwise, <c>false</c>.</value>
         public bool OvershootFail { get; set; }
-
-        /// <summary>
-        /// Returns a <see cref="string"/> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="string"/> that represents this instance.
-        /// </returns>
-        public override string ToString()
-        {
-            return string.Format("X {0} Y {1} A {2}", X, Y, Angle);
-        }
     }
 }
