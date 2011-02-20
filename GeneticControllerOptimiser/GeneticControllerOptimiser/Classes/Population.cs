@@ -77,7 +77,7 @@ namespace GeneticControllerOptimiser.Classes
         /// <returns>A list of <see cref="PopulationMember"/> which are ready to be tested.</returns>
         public static IEnumerable<PopulationMember> Create(IEnumerable<Genome> genomeList, bool disableGravity = true, double initialAngle = 0.0)
         {
-            return genomeList.AsParallel().Select(g => new PopulationMember { Genome = g, Controller = Controller.FromGenome(g), System = new System { DisableGravity = disableGravity, Angle = initialAngle }, NegativeController = Controller.FromGenome(g), NegativeSystem = new System { DisableGravity = disableGravity, Angle = initialAngle } });
+            return genomeList.AsParallel().Select(g => new PopulationMember { Genome = g, Controller = ControllerHelper.FromGenome(g), System = new System { DisableGravity = disableGravity, Angle = initialAngle }, NegativeController = ControllerHelper.FromGenome(g), NegativeSystem = new System { DisableGravity = disableGravity, Angle = initialAngle } });
         }
 
         /// <summary>
@@ -86,11 +86,11 @@ namespace GeneticControllerOptimiser.Classes
         /// <param name="item1">The first parent.</param>
         /// <param name="item2">The second parent.</param>
         /// <returns>The child genome.</returns>
-        public static Genome Breed(Genome item1, Genome item2)
+        private static Genome Breed(ICollection<double> item1, IEnumerable<double> item2)
         {
             var cutPoint = MultiRandom.Next(0, item1.Count);
             var g = new Genome();
-            g.AddRange(item1.Take(cutPoint).ToList());
+            g.AddRange(item1.Take(cutPoint));
             g.AddRange(item2.Skip(cutPoint));
 
             return g;
@@ -205,14 +205,13 @@ namespace GeneticControllerOptimiser.Classes
                 // The simulation detected an overshoot. Don't bother calculating fitness.
                 return 20;
 
-            var data = results.Select(dataTransform).ToList();
+            var rawData = results.Select(dataTransform).ToList();
 
-            data = targetValue < 0 ? data.Select(r => -r).ToList() : data;
+            var data = targetValue < 0 ? rawData.Select(r => -r).ToList() : rawData;
             targetValue = Math.Abs(targetValue);
 
             var min = data.Min();
             var max = data.Max();
-
 
             if (min < -targetValue * accuracy)
             {

@@ -9,15 +9,6 @@ namespace GeneticControllerOptimiser.Classes
     class Genome : List<double>, IEquatable<Genome>
     {
         /// <summary>
-        /// A counter used to help uniquely identify a genome.
-        /// </summary>
-        private static ulong idCount;
-        /// <summary>
-        /// The genome's ID number used to help uniquely identify a genome.
-        /// </summary>
-        private readonly ulong id = idCount++;
-
-        /// <summary>
         /// Creates a new gene.
         /// </summary>
         /// <returns>A number between -50 and 50 that is used for a gene.</returns>
@@ -41,8 +32,6 @@ namespace GeneticControllerOptimiser.Classes
         /// </returns>
         public bool Equals(Genome other)
         {
-            if (id != other.id)
-                return false;
             if (other.Count != Count) return false;
             for (var i = 0; i < Count; i++)
                 if (this[i] != other[i])

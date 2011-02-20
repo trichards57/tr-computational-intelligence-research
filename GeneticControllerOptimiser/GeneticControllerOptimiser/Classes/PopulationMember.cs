@@ -99,18 +99,13 @@ namespace GeneticControllerOptimiser.Classes
         /// </summary>
         /// <param name="cycleCount">The number of cycles to run for.</param>
         /// <param name="targetVariable">The target variable.</param>
-        /// <param name="targetX">The target X coordinate.</param>
-        /// <param name="targetY">The target Y coordinate.</param>
-        /// <param name="targetAngle">The target angle.</param>
+        /// <param name="targetState">The target state of the system.</param>
         /// <param name="fitnessFunction">The fitness function to use.</param>
         /// <param name="accuracy">The target accuracy.</param>
-        /// <param name="doNegative">if set to <c>true</c>, perform negative movement testing.</param>
-        /// <param name="minusTargetX">The negative target X coordinate.</param>
-        /// <param name="minusTargetY">The negative target Y coordinate.</param>
-        /// <param name="minusTargetAngle">The negative target angle.</param>
+        /// <param name="negativeTargetState">The negative target state of the system.</param>
         /// <returns>A list containing the genome and the fitness of the system in each tested direction.</returns>
         /// <remarks>
-        /// The simulation is run by calling <see cref="Classes.Controller.Process" />, and then <see cref="Classes.System.Process"/>
+        /// The simulation is run by calling <see cref="Classes.ControllerHelper.Process" />, and then <see cref="Classes.System.Process"/>
         /// in turn.  If the <see cref="Classes.System"/> detects that the 
         /// pod has overshot, the processing finishes early.  This is permitted because the fitness function
         /// does not require any more information to calculate the fitness.
@@ -118,7 +113,7 @@ namespace GeneticControllerOptimiser.Classes
         /// This function caches previously calculated values.  If the precise genome has already been
         /// processed, it's fitness is retrieved from the cache instead of being recalculated.
         /// </remarks>
-        public PopulationMember Process(int cycleCount, TargetVariables targetVariable, double targetX, double targetY, double targetAngle, FitnessFunction fitnessFunction, double accuracy, bool doNegative = false, double minusTargetX = 0, double minusTargetY = 0, double minusTargetAngle = 0)
+        public PopulationMember Process(int cycleCount, TargetVariables targetVariable, TargetState targetState, FitnessFunction fitnessFunction, double accuracy, TargetState negativeTargetState = null)
         {
             var output = new PopulationMember();
 
@@ -132,19 +127,18 @@ namespace GeneticControllerOptimiser.Classes
             }
 
             var systemState = new SystemState();
-            var targetState = new TargetState();
 
             if (targetVariable.HasFlag(TargetVariables.Angle))
-                targetState.AngleCutOff = targetAngle * 1.18;
+                targetState.AngleCutOff = targetState.Angle * 1.18;
             if (targetVariable.HasFlag(TargetVariables.Vertical))
-                targetState.YCutOff = targetY * 1.18;
+                targetState.YCutOff = targetState.Y * 1.18;
             if (targetVariable.HasFlag(TargetVariables.Horizontal))
-                targetState.XCutOff= targetX * 1.18;
+                targetState.XCutOff = targetState.X * 1.18;
 
             var result = new List<SystemState>();
             for (var i = 0; i < cycleCount; i++)
             {
-                var thrusterState = Controller.Process(systemState, targetX, targetY, targetAngle);
+                var thrusterState = ControllerHelper.Process(Controller, systemState, targetState);
                 systemState = System.Process(thrusterState, targetState);
                 result.Add(systemState);
                 if (systemState.OvershootFail)
@@ -152,31 +146,31 @@ namespace GeneticControllerOptimiser.Classes
             }
 
             output.Controller = Controller;
-            output.Fitness = fitnessFunction(result, targetX, targetY, Math.PI - targetAngle, accuracy);
+            output.Fitness = fitnessFunction(result, targetState.X, targetState.Y, Math.PI - targetState.Angle, accuracy);
             output.Genome = Genome;
             output.System = System;
 
-            if (doNegative)
+            if (negativeTargetState != null)
             {
                 var negSystemState = new SystemState();
                 var negResult = new List<SystemState>();
-                var negTargetState = new TargetState();
+                
                 if (targetVariable.HasFlag(TargetVariables.Angle))
-                    targetState.AngleCutOff = Math.Abs(minusTargetAngle) * 1.18;
+                    negativeTargetState.AngleCutOff = Math.Abs(negativeTargetState.Angle) * 1.18;
                 if (targetVariable.HasFlag(TargetVariables.Vertical))
-                    targetState.YCutOff = Math.Abs(minusTargetY) * 1.18;
+                    negativeTargetState.YCutOff = Math.Abs(negativeTargetState.Y) * 1.18;
                 if (targetVariable.HasFlag(TargetVariables.Horizontal))
-                    targetState.XCutOff = Math.Abs(minusTargetX) * 1.18;
+                    negativeTargetState.XCutOff = Math.Abs(negativeTargetState.X) * 1.18;
 
                 for (var i = 0; i < cycleCount; i++)
                 {
-                    var thrusterState = NegativeController.Process(negSystemState, minusTargetX, minusTargetY, minusTargetAngle);
-                    negSystemState = NegativeSystem.Process(thrusterState, negTargetState);
+                    var thrusterState = ControllerHelper.Process(NegativeController, negSystemState, negativeTargetState);
+                    negSystemState = NegativeSystem.Process(thrusterState, negativeTargetState);
                     negResult.Add(negSystemState);
                 }
 
                 output.NegativeController = NegativeController;
-                output.NegativeFitness = fitnessFunction(negResult, minusTargetX, minusTargetY, Math.PI - minusTargetAngle, accuracy);
+                output.NegativeFitness = fitnessFunction(negResult, negativeTargetState.X, negativeTargetState.Y, Math.PI - negativeTargetState.Angle, accuracy);
                 output.NegativeSystem = System;
             }
 

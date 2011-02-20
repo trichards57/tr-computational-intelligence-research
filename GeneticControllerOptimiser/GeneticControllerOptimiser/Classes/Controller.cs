@@ -5,99 +5,10 @@
 
 namespace GeneticControllerOptimiser.Classes
 {
-    /// <summary>
-    /// The controller used to test each genome.
-    /// </summary>
-    class Controller
+    using global::System.Runtime.InteropServices;
+
+    static class ControllerHelper
     {
-        /// <summary>
-        /// Gets or sets the largest Y speed threshold.
-        /// </summary>
-        /// <value>The largest Y speed threshold.</value>
-        private double BigYSpeed { get; set; }
-        /// <summary>
-        /// Gets or sets the middle Y speed threshold.
-        /// </summary>
-        /// <value>The middle Y speed threshold.</value>
-        private double MidYSpeed { get; set; }
-        /// <summary>
-        /// Gets or sets the smallest Y speed threshold.
-        /// </summary>
-        /// <value>The small Y speed threshold.</value>
-        private double SmlYSpeed { get; set; }
-        /// <summary>
-        /// Gets or sets the largest X speed threshold.
-        /// </summary>
-        /// <value>The largest X speed threshold.</value>
-        private double BigXSpeed { get; set; }
-        /// <summary>
-        /// Gets or sets the middle X speed threshold.
-        /// </summary>
-        /// <value>The middle X speed threshold.</value>
-        private double MidXSpeed { get; set; }
-        /// <summary>
-        /// Gets or sets the smallest X speed threshold.
-        /// </summary>
-        /// <value>The small X speed threshold.</value>
-        private double SmlXSpeed { get; set; }
-
-        /// <summary>
-        /// Gets or sets the largest X error threshold.
-        /// </summary>
-        /// <value>The largest X error threshold.</value>
-        private double BigXError { get; set; }
-        /// <summary>
-        /// Gets or sets the middle X error threshold.
-        /// </summary>
-        /// <value>The middle X error threshold.</value>
-        private double MidXError { get; set; }
-
-        /// <summary>
-        /// Gets or sets the largest Y error threshold.
-        /// </summary>
-        /// <value>The largest Y error threshold.</value>
-        private double BigYError { get; set; }
-        /// <summary>
-        /// Gets or sets the middle Y error threshold.
-        /// </summary>
-        /// <value>The middle Y error treshold.</value>
-        private double MidYError { get; set; }
-
-        /// <summary>
-        /// Gets or sets the force used to accelerate the pod up.
-        /// </summary>
-        /// <value>Upward propulsion force.</value>
-        private double UpForce { get; set; }
-        /// <summary>
-        /// Gets or sets the force used to accelerate the pod down.
-        /// </summary>
-        /// <value>Downward propulsion force.</value>
-        private double DownForce { get; set; }
-
-        /// <summary>
-        /// Gets or sets the angle used to accelerate the pod sidewise.
-        /// </summary>
-        /// <value>The horizontal movement angle.</value>
-        private double PropelAngle { get; set; }
-
-        /// <summary>
-        /// Gets or sets the proportional gain for the angle controller.
-        /// </summary>
-        /// <value>The angle proportional gain.</value>
-        private double AngleProportionalGain { get; set; }
-        /// <summary>
-        /// Gets or sets the differential gain for the angle controller.
-        /// </summary>
-        /// <value>The angle differential gain.</value>
-        private double AngleDifferentialGain { get; set; }
-
-        /// <summary>
-        /// Gets or sets the angle error integral.
-        /// </summary>
-        /// <value>The angle error integral.</value>
-        /// <remarks>Used by the angle control</remarks>
-        private double AngleErrorIntegral { get; set; }
-
         /// <summary>
         /// Creates a controller from the given <paramref name="genome"/>.
         /// </summary>
@@ -139,28 +50,22 @@ namespace GeneticControllerOptimiser.Classes
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Controller"/> class.
-        /// </summary>
-        private Controller()
-        {
-        }
-
-        /// <summary>
         /// Runs the controller with the given state.
         /// </summary>
+        /// <param name="controller">The controller to run.</param>
         /// <param name="state">The state of the system.</param>
-        /// <param name="targetX">The target X coordinate.</param>
-        /// <param name="targetY">The target Y coordinate.</param>
-        /// <param name="targetAngle">The target angle. Should be set to the angle that points the pod straight up in environment units (not normalised units).</param>
-        /// <returns>A set of thruster instructions to control the system.</returns>
+        /// <param name="target">The target state.</param>
+        /// <returns>
+        /// A set of thruster instructions to control the system.
+        /// </returns>
         /// <remarks>
         /// The controller operates in the same way as the <see cref="Controllers.RuleController"/>.
         /// </remarks>
-        public ThrusterState Process(SystemState state, double targetX, double targetY, double targetAngle)
+        public static ThrusterState Process(Controller controller, SystemState state, TargetState target)
         {
             var control = new ThrusterState();
-            var xError = targetX - state.X;
-            var yError = targetY - state.Y;
+            var xError = target.X - state.X;
+            var yError = target.Y - state.Y;
 
             var normalisedAngle = (2 * Math.PI) - ((state.Angle + Math.PI) % (2 * Math.PI));
             if (normalisedAngle > Math.PI)
@@ -171,40 +76,40 @@ namespace GeneticControllerOptimiser.Classes
 
             double maxSpeed;
 
-            if (Math.Abs(yError) > BigYError)
-                maxSpeed = BigYSpeed;
-            else if (Math.Abs(yError) > MidYError)
-                maxSpeed = MidYSpeed;
+            if (Math.Abs(yError) > controller.BigYError)
+                maxSpeed = controller.BigYSpeed;
+            else if (Math.Abs(yError) > controller.MidYError)
+                maxSpeed = controller.MidYSpeed;
             else
-                maxSpeed = SmlYSpeed;
+                maxSpeed = controller.SmlYSpeed;
 
             if (state.DyDt < -maxSpeed)
-                control.Up = DownForce;
+                control.Up = controller.DownForce;
             else if (state.DyDt > maxSpeed)
-                control.Up = UpForce;
+                control.Up = controller.UpForce;
+
+            var targetAngle = target.Angle;
 
             if (xError > 1)
-                targetAngle = PropelAngle;
+                targetAngle = controller.PropelAngle;
             else if (xError < -1)
-                targetAngle = -PropelAngle;
+                targetAngle = -controller.PropelAngle;
 
-            if (Math.Abs(xError) > BigXError)
-                maxSpeed = BigXSpeed;
-            else if (Math.Abs(xError) > MidXError)
-                maxSpeed = MidXSpeed;
+            if (Math.Abs(xError) > controller.BigXError)
+                maxSpeed = controller.BigXSpeed;
+            else if (Math.Abs(xError) > controller.MidXError)
+                maxSpeed = controller.MidXSpeed;
             else
-                maxSpeed = SmlXSpeed;
+                maxSpeed = controller.SmlXSpeed;
 
             if (state.DxDt > maxSpeed)
-                targetAngle = -PropelAngle;
+                targetAngle = -controller.PropelAngle;
             else if (state.DxDt < -maxSpeed)
-                targetAngle = PropelAngle;
+                targetAngle = controller.PropelAngle;
 
             var angError = targetAngle - normalisedAngle;
 
-            AngleErrorIntegral += angError;
-
-            var sideForce = (angError * AngleProportionalGain + state.DAngleDt * AngleDifferentialGain/* + AngleErrorIntegral * AngleIntegralGain*/);
+            var sideForce = (angError * controller.AngleProportionalGain + state.DAngleDt * controller.AngleDifferentialGain);
 
             if (sideForce > 0)
             {
@@ -219,5 +124,93 @@ namespace GeneticControllerOptimiser.Classes
 
             return control;
         }
+    }
+
+    /// <summary>
+    /// The controller used to test each genome.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    struct Controller
+    {
+        /// <summary>
+        /// Gets or sets the largest Y speed threshold.
+        /// </summary>
+        /// <value>The largest Y speed threshold.</value>
+        public double BigYSpeed { get; set; }
+        /// <summary>
+        /// Gets or sets the middle Y speed threshold.
+        /// </summary>
+        /// <value>The middle Y speed threshold.</value>
+        public double MidYSpeed { get; set; }
+        /// <summary>
+        /// Gets or sets the smallest Y speed threshold.
+        /// </summary>
+        /// <value>The small Y speed threshold.</value>
+        public double SmlYSpeed { get; set; }
+        /// <summary>
+        /// Gets or sets the largest X speed threshold.
+        /// </summary>
+        /// <value>The largest X speed threshold.</value>
+        public double BigXSpeed { get; set; }
+        /// <summary>
+        /// Gets or sets the middle X speed threshold.
+        /// </summary>
+        /// <value>The middle X speed threshold.</value>
+        public double MidXSpeed { get; set; }
+        /// <summary>
+        /// Gets or sets the smallest X speed threshold.
+        /// </summary>
+        /// <value>The small X speed threshold.</value>
+        public double SmlXSpeed { get; set; }
+
+        /// <summary>
+        /// Gets or sets the largest X error threshold.
+        /// </summary>
+        /// <value>The largest X error threshold.</value>
+        public double BigXError { get; set; }
+        /// <summary>
+        /// Gets or sets the middle X error threshold.
+        /// </summary>
+        /// <value>The middle X error threshold.</value>
+        public double MidXError { get; set; }
+
+        /// <summary>
+        /// Gets or sets the largest Y error threshold.
+        /// </summary>
+        /// <value>The largest Y error threshold.</value>
+        public double BigYError { get; set; }
+        /// <summary>
+        /// Gets or sets the middle Y error threshold.
+        /// </summary>
+        /// <value>The middle Y error treshold.</value>
+        public double MidYError { get; set; }
+
+        /// <summary>
+        /// Gets or sets the force used to accelerate the pod up.
+        /// </summary>
+        /// <value>Upward propulsion force.</value>
+        public double UpForce { get; set; }
+        /// <summary>
+        /// Gets or sets the force used to accelerate the pod down.
+        /// </summary>
+        /// <value>Downward propulsion force.</value>
+        public double DownForce { get; set; }
+
+        /// <summary>
+        /// Gets or sets the angle used to accelerate the pod sidewise.
+        /// </summary>
+        /// <value>The horizontal movement angle.</value>
+        public double PropelAngle { get; set; }
+
+        /// <summary>
+        /// Gets or sets the proportional gain for the angle controller.
+        /// </summary>
+        /// <value>The angle proportional gain.</value>
+        public double AngleProportionalGain { get; set; }
+        /// <summary>
+        /// Gets or sets the differential gain for the angle controller.
+        /// </summary>
+        /// <value>The angle differential gain.</value>
+        public double AngleDifferentialGain { get; set; }
     }
 }

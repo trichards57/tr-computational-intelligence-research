@@ -6,6 +6,9 @@
     /// <remarks>Used for overshoot detection</remarks>
     class TargetState
     {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Angle { get; set; }
         /// <summary>
         /// Gets or sets the X coordinate cut off.
         /// </summary>
