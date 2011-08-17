@@ -29,7 +29,7 @@ namespace MultiAgentConsole
             var mapHeight = 100;
             var maxAgents = 250;
             var startAgents = 1;
-            var cycleCount = 10000;
+            var cycleCount = 40000;
             var memoryLength = 4;
 
             if (!File.Exists(args[0]))
@@ -107,24 +107,27 @@ namespace MultiAgentConsole
                 }
                 field.CycleAgents();
 #if MOVIE
-                if (i % 10 == 0)
+                const int frameSkip = 10;
+                if (i % frameSkip == 0)
                 {
-                var oImage = new System.Drawing.Bitmap(mapWidth * 10, mapHeight * 10);
-                using (var graphics = System.Drawing.Graphics.FromImage(oImage))
-                {
-                    foreach (var square in field.Squares)
+                    var oImage = new System.Drawing.Bitmap(mapWidth * 10, mapHeight * 10);
+                    using (var graphics = System.Drawing.Graphics.FromImage(oImage))
                     {
-                        var col = square.SquareColor;
-                        graphics.FillRectangle(new SolidBrush(col), (int)square.Position.X * 10, (int)square.Position.Y * 10, 10, 10);
+                        foreach (var square in field.Squares)
+                        {
+                            var col = square.SquareColour;
+                            graphics.FillRectangle(new SolidBrush(col), (int)square.Position.X * 10, (int)square.Position.Y * 10, 10, 10);
+                        }
+                        foreach (var agent in field.AgentsList)
+                        {
+                            graphics.FillEllipse(Brushes.Yellow, (int)agent.Position.X * 10, (int)agent.Position.Y * 10, 10, 10);
+                        }
                     }
-                    foreach (var agent in field.AgentsList)
-                    {
-                        graphics.FillEllipse(Brushes.Yellow, (int)agent.Position.X * 10, (int)agent.Position.Y * 10, 10, 10);
-                    }
-                }
 
-                oImage.Save(string.Format(@".\Frames\output{0:00000000}.gif", i), ImageFormat.Gif);
-                oImage.Dispose();
+                    Directory.CreateDirectory(@".\Frames");
+
+                    oImage.Save(string.Format(@".\Frames\output{0:00000000}.png", i / frameSkip), ImageFormat.Png);
+                    oImage.Dispose();
                 }
 #endif
             }
