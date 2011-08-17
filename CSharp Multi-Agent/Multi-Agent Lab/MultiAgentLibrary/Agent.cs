@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -44,10 +45,6 @@ namespace MultiAgentLibrary
             var currentIndex = x + y * field.Width;
 
             var currentSquare = field.Squares[currentIndex];
-            var upSquare = field.Squares[currentIndex - field.Width];
-            var downSquare = field.Squares[currentIndex + field.Width];
-            var leftSquare = field.Squares[currentIndex - 1];
-            var rightSquare = field.Squares[currentIndex + 1];
 
             if (currentSquare.SquareType == SquareType.Destination)
             {
@@ -56,7 +53,6 @@ namespace MultiAgentLibrary
                 {
                     foreach (var p in pastRoute)
                     {
-
                         field.Squares[p.X + field.Width * p.Y].PheromoneLevel += (uint)(FieldSquare.SuccessPheromoneLevel * sizeScale);
                     }
 
@@ -75,41 +71,31 @@ namespace MultiAgentLibrary
             else
             {
                 var recentSquares = pastRoute.Count >= ShortTermMemoryLength ? pastRoute.GetRange(pastRoute.Count - ShortTermMemoryLength, ShortTermMemoryLength) : pastRoute;
-                var upBias = 1.0;
-                var downBias = 1.0;
-                var leftBias = 1.0;
-                var rightBias = 1.0;
 
-                // Trying to encourage movement away from the home.
-                if (recentSquares.Contains(upSquare.Position))
-                    upBias = 0.25;
-                if (recentSquares.Contains(downSquare.Position))
-                    downBias = 0.25;
-                if (recentSquares.Contains(leftSquare.Position))
-                    leftBias = 0.25;
-                if (recentSquares.Contains(rightSquare.Position))
-                    rightBias = 0.25;
+                var squares = new[] { field.Squares[currentIndex - field.Width], // Square above
+                                      field.Squares[currentIndex + field.Width], // Square below
+                                      field.Squares[currentIndex - 1],           // Square to the left
+                                      field.Squares[currentIndex + 1],           // Square to the right
+                };
 
-                var up = upSquare.PheromoneLevel * upBias;
-                var down = downSquare.PheromoneLevel * downBias;
-                var left = leftSquare.PheromoneLevel * leftBias;
-                var right = rightSquare.PheromoneLevel * rightBias;
+                var biasedSquares = squares.Select(s => new { Square = s, Bias = (recentSquares.Contains(s.Position)) ? 0.25 : 1.0 });
+                var weightedSquares = biasedSquares.Select(s => new { Square = s.Square, Weight = s.Bias * s.Square.PheromoneLevel }).ToList();
+                var totalWeight = weightedSquares.Sum(s => s.Weight);
 
-                var totalWeight = up + down + left + right;
                 var randNum = rand.NextDouble() * totalWeight;
 
-                if (randNum < up)
-                    // Move up
-                    Position = upSquare.Position;
-                else if (randNum < (up + down))
-                    // Move down
-                    Position = downSquare.Position;
-                else if (randNum < (up + down + left))
-                    // Move left
-                    Position = leftSquare.Position;
-                else
-                    // Move right
-                    Position = rightSquare.Position;
+                foreach (var s in weightedSquares)
+                {
+                    if (randNum < s.Weight)
+                    {
+                        Position = s.Square.Position;
+                        break;
+                    }
+                    else
+                    {
+                        randNum -= s.Weight;
+                    }
+                }
 
                 RememberRoute(currentSquare.Position);
             }
