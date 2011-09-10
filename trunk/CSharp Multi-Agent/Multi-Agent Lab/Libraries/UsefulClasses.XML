@@ -1,0 +1,284 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>UsefulClasses</name>
+    </assembly>
+    <members>
+        <member name="T:UsefulClasses.Parameter">
+            <summary>
+            The base class for all types of Parameter to allow all generic implementations to be stored in a single collection.
+            </summary>
+        </member>
+        <member name="M:UsefulClasses.Parameter.#ctor(System.String,System.Object)">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Parameter"/> class.
+            </summary>
+            <param name="label">The parameter's label.</param>
+            <param name="defaultValue">The parameter's default value.</param>
+            <exception cref="T:System.ArgumentException">The <paramref name="label"/> parameter is null or whitespace.</exception>
+        </member>
+        <member name="M:UsefulClasses.Parameter.ParseValue(System.String)">
+            <summary>
+            Function to parse the parameter value from the command line string.
+            </summary>
+            <param name="value">The value to parse.</param>
+        </member>
+        <member name="P:UsefulClasses.Parameter.DefaultValue">
+            <summary>
+            Gets the default value for the parameter.
+            </summary>
+        </member>
+        <member name="P:UsefulClasses.Parameter.Value">
+            <summary>
+            Gets or sets the input value of the parameter.
+            </summary>
+            <value>
+            The value of the parameter.
+            </value>
+        </member>
+        <member name="P:UsefulClasses.Parameter.IsDefaultValue">
+            <summary>
+            Gets or sets a value indicating whether this instance's value is currently at the default value.
+            </summary>
+            <value>
+            	<c>true</c> if this value is the default value; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:UsefulClasses.Parameter.Label">
+            <summary>
+            Gets the label assigned to the parameter.
+            </summary>
+        </member>
+        <member name="P:UsefulClasses.Parameter.FriendlyName">
+            <summary>
+            Gets or sets the friendly name of the parameter.
+            </summary>
+            <value>
+            The friendly name.
+            </value>
+        </member>
+        <member name="P:UsefulClasses.Parameter.Description">
+            <summary>
+            Gets or sets the description of the parameter.
+            </summary>
+            <value>
+            The description.
+            </value>
+        </member>
+        <member name="P:UsefulClasses.Parameter.Required">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:UsefulClasses.Parameter"/> is required.
+            </summary>
+            <value>
+              <c>true</c> if required; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:UsefulClasses.Parameter.ValueType">
+            <summary>
+            Gets or sets the name of the type of the value.
+            </summary>
+            <value>
+            The type of the name of the type of the value.
+            </value>
+        </member>
+        <member name="T:UsefulClasses.Parameter`1">
+            <summary>
+            Generic <see cref="T:UsefulClasses.Parameter"/> to allow type-safe parameters.
+            </summary>
+            <typeparam name="T">The type of the parameter.</typeparam>
+        </member>
+        <member name="M:UsefulClasses.Parameter`1.#ctor(System.String,`0,System.Func{System.String,`0})">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Parameter`1"/> class.
+            </summary>
+            <param name="label">The parameter's label.</param>
+            <param name="defaultValue">The parameter's default value.</param>
+            <param name="parseFunction">The function to parse from a string to <typeparamref name="T"/>.</param>
+            <exception cref="T:System.ArgumentNullException">The <paramref name="parseFunction"/> is null.</exception>
+        </member>
+        <member name="M:UsefulClasses.Parameter`1.ParseValue(System.String)">
+            <summary>
+            Function to parse the parameter value from the command line string.
+            </summary>
+            <param name="value">The value to parse.</param>
+        </member>
+        <member name="P:UsefulClasses.Parameter`1.DefaultValue">
+            <summary>
+            Gets the default value for the parameter.
+            </summary>
+        </member>
+        <member name="P:UsefulClasses.Parameter`1.Value">
+            <summary>
+            Gets the input value of the parameter.
+            </summary>
+            <value>
+            The value of the parameter.
+            </value>
+        </member>
+        <member name="T:UsefulClasses.Exceptions.InvalidLabelException">
+            <summary>
+            The exception that is thrown when an invalid label is registered.
+            </summary>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.InvalidLabelException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.InvalidLabelException"/> class.
+            </summary>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.InvalidLabelException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.InvalidLabelException"/> class with a specified error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.InvalidLabelException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.InvalidLabelException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+            <param name="inner">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.InvalidLabelException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.InvalidLabelException"/> class with serialized data.
+            </summary>
+            <param name="info">The <see cref="T:System.Runtime.Serialization.SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+            <param name="context">The <see cref="T:System.Runtime.Serialization.StreamingContext"/> that contains contextual information about the source or destination.</param>
+            <exception cref="T:System.ArgumentNullException">The <paramref name="info"/> parameter is null. </exception>
+            <exception cref="T:System.Runtime.Serialization.SerializationException">The class name is null or <see cref="P:System.Exception.HResult"/> is zero (0). </exception>
+        </member>
+        <member name="T:UsefulClasses.ParameterManager">
+            <summary>
+            Manages all the parameters used by the program, along with generating messages explaining their use to the user.
+            </summary>
+        </member>
+        <member name="M:UsefulClasses.ParameterManager.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.ParameterManager"/> class.
+            </summary>
+        </member>
+        <member name="M:UsefulClasses.ParameterManager.RegisterParameter(UsefulClasses.Parameter)">
+            <summary>
+            Registers a parameter.
+            </summary>
+            <param name="parameter">The parameter to register.</param>
+            <exception cref="T:System.ArgumentNullException">The <paramref name="parameter"/> parameter is null.</exception>
+            <exception cref="T:UsefulClasses.Exceptions.InvalidLabelException">The parameters label is null or empty.</exception>
+            <exception cref="T:UsefulClasses.Exceptions.DuplicateLabelException">The label has already been registered.</exception>
+        </member>
+        <member name="M:UsefulClasses.ParameterManager.ProcessParameters(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Processes the parameters.
+            </summary>
+            <param name="parameterArray">The parameter array.</param>
+            <exception cref="T:UsefulClasses.Exceptions.InvalidParameterException">The parameter is the wrong format or is not registered.</exception>
+        </member>
+        <member name="M:UsefulClasses.ParameterManager.GenerateParameterStatusMessage">
+            <summary>
+            Generates the parameter status message.
+            </summary>
+            <returns>A string containing the status of all the registered parameters.</returns>
+        </member>
+        <member name="M:UsefulClasses.ParameterManager.GenerateCommandLineUsageMessage(System.String)">
+            <summary>
+            Generates the command line usage message.
+            </summary>
+            <param name="programName">Name of the program.</param>
+            <returns>A string containing the command line usage for the program.</returns>
+        </member>
+        <member name="P:UsefulClasses.ParameterManager.ThrowOnUnregisteredParameter">
+            <summary>
+            Gets or sets a value indicating whether the manager should throw on unregistered parameter.
+            </summary>
+            <value>
+            	<c>true</c> if the manager should throw a <see cref="T:UsefulClasses.Exceptions.InvalidParameterException"/> when encountering an unregistered; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="T:UsefulClasses.Exceptions.InvalidParameterException">
+            <summary>
+            The exception that is thrown when an invalid parameter is encountered.
+            </summary>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.InvalidParameterException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.InvalidParameterException"/> class.
+            </summary>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.InvalidParameterException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.InvalidParameterException"/> class with a specified error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.InvalidParameterException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.InvalidParameterException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+            <param name="inner">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.InvalidParameterException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.InvalidParameterException"/> class with serialized data.
+            </summary>
+            <param name="info">The <see cref="T:System.Runtime.Serialization.SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+            <param name="context">The <see cref="T:System.Runtime.Serialization.StreamingContext"/> that contains contextual information about the source or destination.</param>
+            <exception cref="T:System.ArgumentNullException">The <paramref name="info"/> parameter is null. </exception>
+              
+            <exception cref="T:System.Runtime.Serialization.SerializationException">The class name is null or <see cref="P:System.Exception.HResult"/> is zero (0). </exception>
+        </member>
+        <member name="T:UsefulClasses.StringExtension">
+            <summary>
+            Extension methods for the <see cref="T:System.String"/> class.
+            </summary>
+        </member>
+        <member name="M:UsefulClasses.StringExtension.Wrap(System.String,System.Int32)">
+            <summary>
+            Wraps the specified string in to a set of lines of specified length.
+            </summary>
+            <param name="value">The value to wrap.</param>
+            <param name="width">The width of the line.</param>
+            <returns>An <see cref="!:IEnumerable"/> containing the lines the string was wrapped on to.</returns>
+        </member>
+        <member name="M:UsefulClasses.StringExtension.Explode(System.String,System.Collections.Generic.IEnumerable{System.Char})">
+            <summary>
+            Explodes the specified string.
+            </summary>
+            <param name="value">The string to explode.</param>
+            <param name="splitCharacters">The characters to split the string on.</param>
+            <returns>An <see cref="!:IEnumerable"/> containing the parts of the string.</returns>
+        </member>
+        <member name="T:UsefulClasses.Exceptions.DuplicateLabelException">
+            <summary>
+            The exception that is thrown when a duplicate label is registered.
+            </summary>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.DuplicateLabelException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.DuplicateLabelException"/> class.
+            </summary>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.DuplicateLabelException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.DuplicateLabelException"/> class with a specified error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.DuplicateLabelException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.DuplicateLabelException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+            <param name="inner">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
+        </member>
+        <member name="M:UsefulClasses.Exceptions.DuplicateLabelException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:UsefulClasses.Exceptions.DuplicateLabelException"/> class with serialized data.
+            </summary>
+            <param name="info">The <see cref="T:System.Runtime.Serialization.SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+            <param name="context">The <see cref="T:System.Runtime.Serialization.StreamingContext"/> that contains contextual information about the source or destination.</param>
+            <exception cref="T:System.ArgumentNullException">The <paramref name="info"/> parameter is null. </exception>
+            <exception cref="T:System.Runtime.Serialization.SerializationException">The class name is null or <see cref="P:System.Exception.HResult"/> is zero (0). </exception>
+        </member>
+    </members>
+</doc>

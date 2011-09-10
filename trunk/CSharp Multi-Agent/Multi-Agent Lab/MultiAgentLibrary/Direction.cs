@@ -33,10 +33,11 @@
 //***********************************************************************
 namespace MultiAgentLibrary
 {
-    public enum SquareType
+    public enum Direction
     {
-        Passable,
-        Wall,
-        Destination
+        Up,
+        Down,
+        Left,
+        Right
     }
 }
