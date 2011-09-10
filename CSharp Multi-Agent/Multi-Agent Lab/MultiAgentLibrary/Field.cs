@@ -1,4 +1,37 @@
-﻿using System;
+﻿//***********************************************************************
+// Assembly         : MultiAgentLibrary
+// Author           : Tony Richards
+// Created          : 08-15-2011
+//
+// Last Modified By : Tony Richards
+// Last Modified On : 08-18-2011
+// Description      : 
+//
+// Copyright (c) 2011, Tony Richards
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without modification,
+// are permitted provided that the following conditions are met:
+//
+// Redistributions of source code must retain the above copyright notice, this list
+// of conditions and the following disclaimer.
+//
+// Redistributions in binary form must reproduce the above copyright notice, this
+// list of conditions and the following disclaimer in the documentation and/or other
+// materials provided with the distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+// OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+// OF THE POSSIBILITY OF SUCH DAMAGE.
+//***********************************************************************
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -9,70 +42,56 @@ namespace MultiAgentLibrary
     using System.Drawing;
     using System.Threading.Tasks;
     using System.Globalization;
+    using System.Xml.Serialization;
 
+    [XmlRoot]
     public class Field
     {
+        [XmlElement]
         public Point StartPoint { get; set; }
 
-        private readonly List<Agent> agentsList;
+        [XmlIgnore]
+        public List<Agent> AgentsList { get; set; }
 
-        public Collection<Agent> AgentsList
-        {
-            get
-            {
-                return new Collection<Agent>(agentsList);
-            }
-        }
+        [XmlArray]
+        [XmlArrayItem("P")]
+        public List<Point> OriginalRoute { get; set; }
 
-        private readonly List<Point> originalRoute;
+        [XmlIgnore]
+        public List<Point> ShortestRoute { get; set; }
 
-        public ReadOnlyCollection<Point> OriginalRoute
-        {
-            get
-            {
-                return new ReadOnlyCollection<Point>(originalRoute);
-            }
-        }
+        [XmlArray]
+        [XmlArrayItem("FS")]
+        public FieldSquare[] Squares { get; set; }
 
-        private readonly List<Point> shortestRoute;
-
-        public Collection<Point> ShortestRoute
-        {
-            get
-            {
-                return new Collection<Point>(shortestRoute);
-            }
-        }
-
-        private readonly FieldSquare[] squares;
-        public ReadOnlyCollection<FieldSquare> Squares
-        {
-            get
-            {
-                return new ReadOnlyCollection<FieldSquare>(squares);
-            }
-        }
-
+        [XmlAttribute]
         public int Width { get; set; }
 
+        [XmlAttribute]
         public int Height { get; set; }
 
+        [XmlElement]
         public SizeF SquareSize { get; set; }
+
+        public Field()
+        {
+            AgentsList = new List<Agent>();
+            OriginalRoute = new List<Point>();
+            ShortestRoute = new List<Point>();
+        }
 
         public Field(int width) : this(width, width) { }
 
         public Field(int width, int height)
+            : this()
         {
-            agentsList = new List<Agent>();
-            squares = new FieldSquare[width * height];
-            originalRoute = new List<Point>();
-            shortestRoute = new List<Point>();
+            Squares = new FieldSquare[width * height];
 
             for (var x = 0; x < width; x++)
             {
                 for (var y = 0; y < height; y++)
                 {
-                    squares[x + y * width] = new FieldSquare(new Point(x, y));
+                    Squares[x + y * width] = new FieldSquare(new Point(x, y));
                 }
             }
             Width = width;
@@ -152,7 +171,7 @@ namespace MultiAgentLibrary
             // Scale the starting point
             StartPoint = new Point((int)Math.Round(origStartPoint.X / xRectSize), (int)Math.Round(origStartPoint.Y / yRectSize));
 
-            originalRoute.AddRange(unscaledOriginalRoute.Select(p => new Point((int)Math.Round(p.X / xRectSize), (int)Math.Round(p.Y / yRectSize))));
+            OriginalRoute.AddRange(unscaledOriginalRoute.Select(p => new Point((int)Math.Round(p.X / xRectSize), (int)Math.Round(p.Y / yRectSize))));
 
             Parallel.ForEach(rawPoints, p =>
                 {
@@ -160,14 +179,14 @@ namespace MultiAgentLibrary
 
                     var index = newPoint.X + newPoint.Y * height;
 
-                    lock (squares[index].LockObject)
+                    lock (Squares[index].LockObject)
                     {
                         if (p.State == SensorState.End)
                         {
-                            squares[index].SquareType = SquareType.Destination;
+                            Squares[index].SquareType = SquareType.Destination;
                         }
-                        else if (p.State == SensorState.Boundary && squares[index].SquareType != SquareType.Destination)
-                            squares[index].SquareType = SquareType.Wall;
+                        else if (p.State == SensorState.Boundary && Squares[index].SquareType != SquareType.Destination)
+                            Squares[index].SquareType = SquareType.Wall;
                     }
                 });
         }
@@ -176,7 +195,7 @@ namespace MultiAgentLibrary
         {
             Parallel.ForEach(AgentsList, agent => agent.Process(this));
 
-            Parallel.ForEach(squares.Where(square => square.PheromoneLevel > 1 && square.SquareType == SquareType.Passable),
+            Parallel.ForEach(Squares.Where(square => square.PheromoneLevel > 1 && square.SquareType == SquareType.Passable),
                 square =>
                 {
                     square.PheromoneLevel -= FieldSquare.PheromoneDecayRate;

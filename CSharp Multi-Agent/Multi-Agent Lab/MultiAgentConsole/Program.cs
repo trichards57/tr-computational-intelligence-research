@@ -1,4 +1,37 @@
-﻿using System;
+﻿//***********************************************************************
+// Assembly         : MultiAgentConsole
+// Author           : Tony Richards
+// Created          : 08-15-2011
+//
+// Last Modified By : Tony Richards
+// Last Modified On : 08-29-2011
+// Description      : 
+//
+// Copyright (c) 2011, Tony Richards
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without modification,
+// are permitted provided that the following conditions are met:
+//
+// Redistributions of source code must retain the above copyright notice, this list
+// of conditions and the following disclaimer.
+//
+// Redistributions in binary form must reproduce the above copyright notice, this
+// list of conditions and the following disclaimer in the documentation and/or other
+// materials provided with the distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+// OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+// OF THE POSSIBILITY OF SUCH DAMAGE.
+//***********************************************************************
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -6,13 +39,21 @@ using System.Linq;
 using System.Reflection;
 using MultiAgentLibrary;
 
+using UsefulClasses;
+using System.Globalization;
+
 namespace MultiAgentConsole
 {
     using System.Diagnostics;
     using System.Collections.Generic;
+    using System.Xml.Serialization;
+    using System.Xml;
+    using UsefulClasses.Exceptions;
 
-    class Program
+    internal sealed class Program
     {
+        static ParameterManager parameterManager = new ParameterManager();
+
         static int Main(string[] args)
         {
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
@@ -24,68 +65,87 @@ namespace MultiAgentConsole
                 return 1;
             }
 
-            var dataFile = args[0];
-            var mapWidth = 100;
-            var mapHeight = 100;
-            var maxAgents = 250;
-            var startAgents = 1;
-            var cycleCount = 40000;
-            var memoryLength = 4;
+            var dataFileParameter = new Parameter<string>("d", null, s => s) { Description = "The filename of a CSV file containing sensor readings.", FriendlyName = "Sensor Data File", Required = true };
+            var cacheFileParameter = new Parameter<string>("cf", "field.xml", s => s) { Description = "The filename of an XML file to use as a cache for the processed sensor readings.", FriendlyName = "Sensor Data Cache File" };
+            var outputFileParameter = new Parameter<string>("of", "route.csv", s => s) { Description = "The filename of a CSV file containing the output route.", FriendlyName = "Route File" };
+            var outputImageParameter = new Parameter<string>("oi", "output.gif", s => s) { Description = "The filename of a GIF file containing the routine result shown as an image.", FriendlyName = "Output Image" };
+            var mapWidthParameter = new Parameter<int>("w", 100, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the desired width of the map.", FriendlyName = "Map Width" };
+            var mapHeightParameter = new Parameter<int>("h", 100, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the desired height of the map.", FriendlyName = "Map Height" };
+            var maxAgentsParameter = new Parameter<int>("ma", 250, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the maximum number of agents for the simulation.", FriendlyName = "Maximum Agents" };
+            var startAgentsParameter = new Parameter<int>("sa", 1, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the maximum number of agents for the simulation.", FriendlyName = "Starting Agents" };
+            var cycleCountParameter = new Parameter<int>("c", 40000, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the number of cycles the sequence will run for.", FriendlyName = "Cycle Count" };
+            var memoryLengthParameter = new Parameter<int>("sm", 4, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the length of the agent's short term route memory, which is used to prevent back tracking.", FriendlyName = "Short Term Memory Length" };
 
-            if (!File.Exists(args[0]))
+            var snapshotIntervalParameter = new Parameter<int>("si", -1, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "The interval that a snapshot should be taken at. -1 disables the snapshots.", FriendlyName = "Snapshot Interval" };
+
+            parameterManager.RegisterParameter(dataFileParameter);
+            parameterManager.RegisterParameter(cacheFileParameter);
+            parameterManager.RegisterParameter(outputFileParameter);
+            parameterManager.RegisterParameter(outputImageParameter);
+            parameterManager.RegisterParameter(mapWidthParameter);
+            parameterManager.RegisterParameter(mapHeightParameter);
+            parameterManager.RegisterParameter(maxAgentsParameter);
+            parameterManager.RegisterParameter(startAgentsParameter);
+            parameterManager.RegisterParameter(cycleCountParameter);
+            parameterManager.RegisterParameter(memoryLengthParameter);
+            parameterManager.RegisterParameter(snapshotIntervalParameter);
+
+            try
             {
-                Console.WriteLine("Data file {0} does not exist.", args[0]);
+                parameterManager.ProcessParameters(args);
+            }
+            catch (InvalidParameterException ex)
+            {
+                var str = string.Format(CultureInfo.CurrentCulture, "Unable to process command line arguments : {0}", ex.Message);
+                var parts = str.Wrap(Console.WindowWidth);
+                
+                foreach (var p in parts)
+                    Console.WriteLine(p);
+
+                Console.WriteLine();
+                WriteInstructions();
+                return 1;
+            }
+
+            var dataFile = dataFileParameter.Value;
+            var cacheFile = cacheFileParameter.Value;
+            var mapWidth = mapWidthParameter.Value;
+            var mapHeight = mapHeightParameter.Value;
+            var maxAgents = maxAgentsParameter.Value;
+            var startAgents = startAgentsParameter.Value;
+            var cycleCount = cycleCountParameter.Value;
+            var memoryLength = memoryLengthParameter.Value;
+            var outputFile = outputFileParameter.Value;
+            var outputImage = outputImageParameter.Value;
+            var frameSkip = snapshotIntervalParameter.Value;
+
+            if (!File.Exists(dataFile))
+            {
+                Console.WriteLine("Data file {0} does not exist.", dataFile);
                 return 2;
             }
 
-            if (args.Length > 1)
-            {
-                var extraArgs = args.Where((item, index) => index > 0).Select(item =>
-                    {
-                        var parts = item.Split(new[] { ":" }, StringSplitOptions.None);
-                        return new { ParamLabel = parts[0], Value = int.Parse(parts[1]) };
-                    });
-                foreach (var a in extraArgs)
-                {
-                    switch (a.ParamLabel)
-                    {
-                        case "/w":
-                            mapWidth = a.Value;
-                            break;
-                        case "/h":
-                            mapHeight = a.Value;
-                            break;
-                        case "/ma":
-                            maxAgents = a.Value;
-                            break;
-                        case "/sa":
-                            startAgents = a.Value;
-                            break;
-                        case "/c":
-                            cycleCount = a.Value;
-                            break;
-                        case "/sm":
-                            memoryLength = a.Value;
-                            break;
-                        default:
-                            Console.WriteLine("Unknown Parameter : {0}", a.ParamLabel);
-                            WriteInstructions();
-                            return 1;
-                    }
-                }
-            }
-
-            Console.WriteLine("Data File                : {0}", dataFile);
-            Console.WriteLine("Map Width                : {0}", mapWidth);
-            Console.WriteLine("Map Height               : {0}", mapHeight);
-            Console.WriteLine("Max Agents               : {0}", maxAgents);
-            Console.WriteLine("Starting Agents          : {0}", startAgents);
-            Console.WriteLine("Cycle Count              : {0}", cycleCount);
-            Console.WriteLine("Short Term Memory Length : {0}", memoryLength);
-            Console.WriteLine();
+            Console.WriteLine(parameterManager.GenerateParameterStatusMessage());
 
             Console.WriteLine("Loading data file...");
-            var field = new Field(mapWidth, mapHeight, dataFile);
+            Field field;
+            if (File.Exists(cacheFile) && File.GetLastWriteTimeUtc(cacheFile) > File.GetLastWriteTimeUtc(dataFile))
+            {
+                Console.WriteLine("Loading data from cache...");
+                var deserializer = new XmlSerializer(typeof(Field));
+                var stream = XmlReader.Create(cacheFile);
+                field = (Field)deserializer.Deserialize(stream);
+                stream.Close();
+            }
+            else
+            {
+                field = new Field(mapWidth, mapHeight, dataFile);
+                Console.WriteLine("Caching field data...");
+                var serializer = new XmlSerializer(typeof(Field));
+                var stream = XmlWriter.Create(cacheFile);
+                serializer.Serialize(stream, field);
+                stream.Close();
+            }
             Console.WriteLine("Data file loaded.");
             Console.WriteLine();
 
@@ -106,9 +166,8 @@ namespace MultiAgentConsole
                     field.AgentsList.Add(new Agent(field.StartPoint, memoryLength));
                 }
                 field.CycleAgents();
-#if MOVIE
-                const int frameSkip = 10;
-                if (i % frameSkip == 0)
+
+                if (frameSkip != -1 && i % frameSkip == 0)
                 {
                     var oImage = new System.Drawing.Bitmap(mapWidth * 10, mapHeight * 10);
                     using (var graphics = System.Drawing.Graphics.FromImage(oImage))
@@ -126,10 +185,9 @@ namespace MultiAgentConsole
 
                     Directory.CreateDirectory(@".\Frames");
 
-                    oImage.Save(string.Format(@".\Frames\output{0:00000000}.png", i / frameSkip), ImageFormat.Png);
+                    oImage.Save(string.Format(CultureInfo.CurrentCulture, @".\Frames\output{0:00000000}.png", i / frameSkip), ImageFormat.Png);
                     oImage.Dispose();
                 }
-#endif
             }
             stopwatch.Stop();
             Console.WriteLine("Simulation stopped.  Total Time : {0} seconds", stopwatch.Elapsed.TotalSeconds);
@@ -137,8 +195,8 @@ namespace MultiAgentConsole
 
             Console.WriteLine("Outputing final state image.");
 
-            var outputImage = new Bitmap(mapWidth * 10, mapHeight * 10);
-            using (var graphics = Graphics.FromImage(outputImage))
+            var outputBitmap = new Bitmap(mapWidth * 10, mapHeight * 10);
+            using (var graphics = Graphics.FromImage(outputBitmap))
             {
 
                 foreach (var square in field.Squares)
@@ -156,7 +214,7 @@ namespace MultiAgentConsole
                 }
             }
 
-            outputImage.Save("output.gif", ImageFormat.Gif);
+            outputBitmap.Save(outputImage, ImageFormat.Gif);
 
             Console.WriteLine("Image written.");
 
@@ -165,7 +223,7 @@ namespace MultiAgentConsole
 
             var result = new List<PointF>();
 
-            for (var i = 0; i < scaledData.Count(); i++)
+            for (var i = 0; i < scaledData.Count; i++)
             {
                 if (result.Count < 2)
                     result.Add(scaledData[i]);
@@ -189,13 +247,14 @@ namespace MultiAgentConsole
             }
 
             Console.WriteLine("Writing route data file.");
-            using (var file = new StreamWriter(File.OpenWrite("route.csv")))
+            using (var file = new StreamWriter(File.OpenWrite(outputFile)))
             {
                 foreach (var p in result)
                 {
                     file.WriteLine("{0},{1}", p.X, p.Y);
                 }
             }
+            Console.WriteLine("Shortest Route Length : {0}", field.ShortestRoute.Count);
             Console.WriteLine("Finished...");
 
             Console.ReadLine();
@@ -204,25 +263,10 @@ namespace MultiAgentConsole
 
         static void WriteInstructions()
         {
-            Console.WriteLine("Command Line Usage : ");
-            Console.WriteLine("MultiAgentConsole.exe DataFile.csv [/w:width] [/h:height] [/ma:maxAgentCount]");
-            Console.WriteLine("                                   [/sa:startingAgentCount] [/c:CycleCount]");
-            Console.WriteLine("    /w  : An integer specifying the desired width of the map. Default : 100");
-            Console.WriteLine("    /h  : An integer specifying the desired height of the map.");
-            Console.WriteLine("          Default : 100");
-            Console.WriteLine("    /ma : An integer specifying the maximum number of agents for the");
-            Console.WriteLine("          simulation. Default : 250");
-            Console.WriteLine("    /sa : An integer specifying the starting number of agents for the");
-            Console.WriteLine("          simulation. Default : 1");
-            Console.WriteLine("    /c  : An integer specifying the number of cycles the sequence will");
-            Console.WriteLine("          run for. Default : 10000");
-            Console.WriteLine("    /sm : An integer specifying the length of the agent's short term route");
-            Console.WriteLine("          memory, which is used to prevent back tracking. Default : 4");
-            Console.WriteLine();
-            Console.WriteLine("Return Values : ");
-            Console.WriteLine("0 : Success");
-            Console.WriteLine("1 : Argument Error");
-            Console.WriteLine("2 : Data File Not Found");
+            Console.WriteLine(parameterManager.GenerateCommandLineUsageMessage("MultiAgentConsole.exe"));
+
+            Console.WriteLine("Press ENTER to exit...");
+
             Console.ReadLine();
         }
     }
