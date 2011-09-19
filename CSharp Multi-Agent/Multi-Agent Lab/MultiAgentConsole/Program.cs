@@ -69,14 +69,20 @@ namespace MultiAgentConsole
             var cacheFileParameter = new Parameter<string>("cf", "field.xml", s => s) { Description = "The filename of an XML file to use as a cache for the processed sensor readings.", FriendlyName = "Sensor Data Cache File" };
             var outputFileParameter = new Parameter<string>("of", "route.csv", s => s) { Description = "The filename of a CSV file containing the output route.", FriendlyName = "Route File" };
             var outputImageParameter = new Parameter<string>("oi", "output.gif", s => s) { Description = "The filename of a GIF file containing the routine result shown as an image.", FriendlyName = "Output Image" };
-            var mapWidthParameter = new Parameter<int>("w", 100, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the desired width of the map.", FriendlyName = "Map Width" };
-            var mapHeightParameter = new Parameter<int>("h", 100, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the desired height of the map.", FriendlyName = "Map Height" };
-            var maxAgentsParameter = new Parameter<int>("ma", 250, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the maximum number of agents for the simulation.", FriendlyName = "Maximum Agents" };
-            var startAgentsParameter = new Parameter<int>("sa", 1, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the maximum number of agents for the simulation.", FriendlyName = "Starting Agents" };
-            var cycleCountParameter = new Parameter<int>("c", 40000, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the number of cycles the sequence will run for.", FriendlyName = "Cycle Count" };
-            var memoryLengthParameter = new Parameter<int>("sm", 4, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "An integer specifying the length of the agent's short term route memory, which is used to prevent back tracking.", FriendlyName = "Short Term Memory Length" };
+            var mapWidthParameter = new Parameter<int>("w", 100, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "An integer specifying the desired width of the map.", FriendlyName = "Map Width" };
+            var mapHeightParameter = new Parameter<int>("h", 100, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "An integer specifying the desired height of the map.", FriendlyName = "Map Height" };
+            var maxAgentsParameter = new Parameter<int>("ma", 250, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "An integer specifying the maximum number of agents for the simulation.", FriendlyName = "Maximum Agents" };
+            var startAgentsParameter = new Parameter<int>("sa", 1, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "An integer specifying the maximum number of agents for the simulation.", FriendlyName = "Starting Agents" };
+            var cycleCountParameter = new Parameter<int>("c", 40000, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "An integer specifying the number of cycles the sequence will run for.", FriendlyName = "Cycle Count" };
+            var memoryLengthParameter = new Parameter<int>("sm", 4, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "An integer specifying the length of the agent's short term route memory, which is used to prevent back tracking.", FriendlyName = "Short Term Memory Length" };
 
-            var snapshotIntervalParameter = new Parameter<int>("si", -1, s => int.Parse(s, CultureInfo.InvariantCulture, CultureInfo.InvariantCulture)) { Description = "The interval that a snapshot should be taken at. -1 disables the snapshots.", FriendlyName = "Snapshot Interval" };
+            var snapshotIntervalParameter = new Parameter<int>("si", -1, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "The interval that a snapshot should be taken at. -1 disables the snapshots.", FriendlyName = "Snapshot Interval" };
+
+            var outputSummeryParameter = new Parameter<string>("os", null, s => s) { Description = "The filename of an XML file used to store the output data for batch mode.", FriendlyName = "Output Summary File" };
+
+            var batchModeParameter = new Parameter<bool>("bm", false, s => bool.Parse(s)) { Description = "A boolean (true/false) specifying if the program should run in no-wait mode.", FriendlyName = "Batch Mode" };
+
+            var xmlSnapshotIntervalParameter = new Parameter<int>("xi", -1, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "The interval that an XML snapshot should be taken at. -1 disables the snapshots.", FriendlyName = "XML Snapshot Interval" };
 
             parameterManager.RegisterParameter(dataFileParameter);
             parameterManager.RegisterParameter(cacheFileParameter);
@@ -89,6 +95,9 @@ namespace MultiAgentConsole
             parameterManager.RegisterParameter(cycleCountParameter);
             parameterManager.RegisterParameter(memoryLengthParameter);
             parameterManager.RegisterParameter(snapshotIntervalParameter);
+            parameterManager.RegisterParameter(outputSummeryParameter);
+            parameterManager.RegisterParameter(batchModeParameter);
+            parameterManager.RegisterParameter(xmlSnapshotIntervalParameter);
 
             try
             {
@@ -98,7 +107,7 @@ namespace MultiAgentConsole
             {
                 var str = string.Format(CultureInfo.CurrentCulture, "Unable to process command line arguments : {0}", ex.Message);
                 var parts = str.Wrap(Console.WindowWidth);
-                
+
                 foreach (var p in parts)
                     Console.WriteLine(p);
 
@@ -118,6 +127,9 @@ namespace MultiAgentConsole
             var outputFile = outputFileParameter.Value;
             var outputImage = outputImageParameter.Value;
             var frameSkip = snapshotIntervalParameter.Value;
+            var outputSummaryFile = outputSummeryParameter.Value;
+            var batchMode = batchModeParameter.Value;
+            var xmlSnapshotInterval = xmlSnapshotIntervalParameter.Value;
 
             if (!File.Exists(dataFile))
             {
@@ -155,11 +167,13 @@ namespace MultiAgentConsole
             Console.WriteLine("Initial agents set up.");
             Console.WriteLine();
 
+            var snapshotList = new SnapshotCollection();
+
             Console.WriteLine("Starting simulation.");
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            for (var i = 0; i < cycleCount; i++)
+            for (var i = 0; i <= cycleCount; i++)
             {
                 if ((i + 1) % 10 == 0 && field.AgentsList.Count < maxAgents)
                 {
@@ -187,6 +201,13 @@ namespace MultiAgentConsole
 
                     oImage.Save(string.Format(CultureInfo.CurrentCulture, @".\Frames\output{0:00000000}.png", i / frameSkip), ImageFormat.Png);
                     oImage.Dispose();
+                }
+                if (xmlSnapshotInterval != -1 && i % xmlSnapshotInterval == 0)
+                {
+                    if (outputSummaryFile != null)
+                    {
+                        snapshotList.Snapshots.Add(new Snapshot { CycleCount = i, RouteLength = field.ShortestRoute.Count });
+                    }
                 }
             }
             stopwatch.Stop();
@@ -247,7 +268,7 @@ namespace MultiAgentConsole
             }
 
             Console.WriteLine("Writing route data file.");
-            using (var file = new StreamWriter(File.OpenWrite(outputFile)))
+            using (var file = new StreamWriter(File.Open(outputFile, FileMode.Create, FileAccess.Write)))
             {
                 foreach (var p in result)
                 {
@@ -255,9 +276,20 @@ namespace MultiAgentConsole
                 }
             }
             Console.WriteLine("Shortest Route Length : {0}", field.ShortestRoute.Count);
-            Console.WriteLine("Finished...");
 
-            Console.ReadLine();
+            if (outputSummaryFile != null)
+            {
+                using (var file = File.Open(outputSummaryFile, FileMode.Create, FileAccess.Write))
+                {
+                    var writer = new XmlSerializer(typeof(SnapshotCollection));
+                    writer.Serialize(file, snapshotList);
+                    file.Close();
+                }
+            }
+
+            Console.WriteLine("Finished...");
+            if (!batchMode)
+                Console.ReadLine();
             return 0;
         }
 

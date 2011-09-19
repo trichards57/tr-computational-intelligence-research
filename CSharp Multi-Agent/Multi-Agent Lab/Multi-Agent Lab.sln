@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiAgentLibrary", "MultiA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FieldTidier", "FieldTidier\FieldTidier.csproj", "{0E2D1955-000D-42CA-9093-EA2115A0ACC1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiAgentBatch", "MultiAgentBatch\MultiAgentBatch.csproj", "{80556156-494A-4636-B4F4-CDA24C1CAD5C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,18 @@ Global
 		{0E2D1955-000D-42CA-9093-EA2115A0ACC1}.Release|Win32.ActiveCfg = Release|x86
 		{0E2D1955-000D-42CA-9093-EA2115A0ACC1}.Release|x86.ActiveCfg = Release|x86
 		{0E2D1955-000D-42CA-9093-EA2115A0ACC1}.Release|x86.Build.0 = Release|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Debug|Win32.ActiveCfg = Debug|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Debug|x86.ActiveCfg = Debug|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Debug|x86.Build.0 = Debug|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Release|Any CPU.ActiveCfg = Release|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Release|Mixed Platforms.Build.0 = Release|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Release|Win32.ActiveCfg = Release|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Release|x86.ActiveCfg = Release|x86
+		{80556156-494A-4636-B4F4-CDA24C1CAD5C}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

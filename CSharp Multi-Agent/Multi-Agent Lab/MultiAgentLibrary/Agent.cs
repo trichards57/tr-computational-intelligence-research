@@ -94,11 +94,11 @@ namespace MultiAgentLibrary
                         field.ShortestRoute.Clear();
                         foreach (var p in pastRoute)
                             field.ShortestRoute.Add(p);
+                        Console.WriteLine("Agent Route Length : {0}", pastRoute.Count);
                     }
                 }
 
                 Position = startPosition;
-                Console.WriteLine("Agent Route Length : {0}", pastRoute.Count);
                 pastRoute.Clear();
             }
             else
@@ -110,10 +110,10 @@ namespace MultiAgentLibrary
                                       field.Squares[currentIndex - 1],           // Square to the left
                                       field.Squares[currentIndex + 1],           // Square to the right
 
-                                      field.Squares[currentIndex - field.Width - 1], // Square above and to the left
+                                      /*field.Squares[currentIndex - field.Width - 1], // Square above and to the left
                                       field.Squares[currentIndex - field.Width + 1], // Square above and to the right
                                       field.Squares[currentIndex + field.Width - 1], // Square below and to the left
-                                      field.Squares[currentIndex + field.Width + 1], // Square below and to the right
+                                      field.Squares[currentIndex + field.Width + 1], // Square below and to the right*/
                 };
 
                 var biasedSquares = squares.Select(s => new { Square = s, Bias = (recentSquares.Contains(s.Position)) ? 0.25 : 1.0 });
