@@ -35,6 +35,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Diagnostics;
 
 namespace MultiAgentLibrary
 {
@@ -49,6 +50,7 @@ namespace MultiAgentLibrary
         public int ShortTermMemoryLength { get; set; }
 
         private readonly List<Point> pastRoute = new List<Point>();
+        private readonly HashSet<Point> pastRouteHash = new HashSet<Point>();
 
         private readonly Random rand = new Random();
 
@@ -100,6 +102,7 @@ namespace MultiAgentLibrary
 
                 Position = startPosition;
                 pastRoute.Clear();
+                pastRouteHash.Clear();
             }
             else
             {
@@ -141,15 +144,22 @@ namespace MultiAgentLibrary
 
         private void RememberRoute(Point currentSquare)
         {
-            if (pastRoute.Contains(currentSquare))
+            if (pastRouteHash.Contains(currentSquare))
             {
+                Debug.Assert(pastRoute.Contains(currentSquare));
                 // Already been here. All the exploring since was pointless...
                 var index = pastRoute.IndexOf(currentSquare);
+                var subList = pastRoute.Skip(index + 1);
+                foreach (var r in subList)
+                    pastRouteHash.Remove(r);
                 pastRoute.RemoveRange(index + 1, pastRoute.Count - (index + 1));
+                
             }
             else
             {
+                Debug.Assert(!pastRoute.Contains(currentSquare));
                 pastRoute.Add(currentSquare);
+                pastRouteHash.Add(currentSquare);
             }
         }
     }

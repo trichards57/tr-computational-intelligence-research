@@ -79,7 +79,7 @@ namespace MultiAgentBatch
             {
 
                 var processData = new ProcessStartInfo(consolePath);
-                processData.Arguments = string.Format("/d:{0} /os:output.xml /bm:true /xi:1000 /c:100000", dataFile);
+                processData.Arguments = string.Format("/d:{0} /os:output.xml /bm:true /xi:1000 /c:50000", dataFile);
 
                 var process = Process.Start(processData);
 
@@ -88,8 +88,8 @@ namespace MultiAgentBatch
                 var reader = new XmlSerializer(typeof(SnapshotCollection));
                 using (var f = File.OpenRead("output.xml"))
                 {
-                    var snapshots = reader.Deserialize(f);
-                    snaps.Snapshots.AddRange(snaps.Snapshots);
+                    var snapshots = reader.Deserialize(f) as SnapshotCollection;
+                    snaps.Snapshots.AddRange(snapshots.Snapshots);
                 }
 
                 //using (var file = File.Open("output.xml", FileMode.Open, FileAccess.Read))
@@ -99,6 +99,8 @@ namespace MultiAgentBatch
                 //    var child = doc.DocumentElement.FirstChild;
                 //    outputWriter.WriteRaw(child.OuterXml);
                 //}
+
+                Console.WriteLine("Iteration {0} complete.", iteration);
             }
             using (var outputStream = File.Open(outputFile, FileMode.Create, FileAccess.Write))
             {
