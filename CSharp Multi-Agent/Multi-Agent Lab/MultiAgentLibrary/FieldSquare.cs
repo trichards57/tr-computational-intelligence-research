@@ -39,27 +39,28 @@ namespace MultiAgentLibrary
 {
     public class FieldSquare
     {
+        private Field parent;
+
         public const int SuccessPheromoneLevel = 1000;
         public const int PheromoneDecayRate = (SuccessPheromoneLevel) / 1000;
 
-        private uint pheromoneLevel;
-
         public const uint MaxPheromoneLevel = uint.MaxValue;
-
-        private readonly object lockObject = new object();
 
         public FieldSquare()
         {
         }
 
-        public FieldSquare(Point position)
+        public FieldSquare(Point position, Field parentField)
         {
+            parent = parentField;
             Position = position;
             PheromoneLevel = 1;
         }
 
         [XmlElement("POS")]
         public Point Position { get; set; }
+
+        private int index { get { return Position.X + Position.Y * parent.Width; } }
 
         [XmlIgnore]
         public Color SquareColour
@@ -73,7 +74,7 @@ namespace MultiAgentLibrary
                     case SquareType.Destination:
                         return Color.White;
                     default:
-                        var level = (byte)(Math.Round((255.0 / Math.Log(MaxPheromoneLevel)) * Math.Log(pheromoneLevel)));
+                        var level = (byte)(Math.Round((255.0 / Math.Log(MaxPheromoneLevel)) * Math.Log(PheromoneLevel)));
                         return Color.FromArgb(0, level, 0);
                 }
             }
@@ -84,32 +85,25 @@ namespace MultiAgentLibrary
         {
             get
             {
-                return pheromoneLevel;
+                return parent.PheromoneLevels[index];
             }
             set
             {
-                if (value > MaxPheromoneLevel)
-                    pheromoneLevel = MaxPheromoneLevel;
-                else if (value < 0)
-                    pheromoneLevel = 0;
-                else
-                    pheromoneLevel = value;
+                parent.PheromoneLevels[index] = value;
             }
         }
-
-        private SquareType type;
 
         [XmlAttribute]
         public SquareType SquareType
         {
             get
             {
-                return type;
+                return parent.SquareTypes[index];
             }
             set
             {
-                type = value;
-                switch (type)
+                parent.SquareTypes[index] = value;
+                switch (parent.SquareTypes[index])
                 {
                     case SquareType.Wall:
                         PheromoneLevel = 0;
@@ -129,7 +123,7 @@ namespace MultiAgentLibrary
         {
             get
             {
-                return lockObject;
+                return parent.LockObjects[index];
             }
         }
     }

@@ -64,6 +64,10 @@ namespace MultiAgentLibrary
         [XmlArrayItem("FS")]
         public FieldSquare[] Squares { get; set; }
 
+        internal uint[] PheromoneLevels;
+        internal SquareType[] SquareTypes;
+        internal object[] LockObjects;
+
         [XmlAttribute]
         public int Width { get; set; }
 
@@ -85,17 +89,26 @@ namespace MultiAgentLibrary
         public Field(int width, int height)
             : this()
         {
-            Squares = new FieldSquare[width * height];
+            var totalIndex = width * height;
+            Squares = new FieldSquare[totalIndex];
+            PheromoneLevels = new uint[totalIndex];
+            SquareTypes = new SquareType[totalIndex];
+            LockObjects = new object[totalIndex];
+
+            for (var i = 0; i < LockObjects.Length; i++)
+                LockObjects[i] = new object();
+
+            Width = width;
+            Height = height;
 
             for (var x = 0; x < width; x++)
             {
                 for (var y = 0; y < height; y++)
                 {
-                    Squares[x + y * width] = new FieldSquare(new Point(x, y));
+                    Squares[x + y * width] = new FieldSquare(new Point(x, y), this);
                 }
             }
-            Width = width;
-            Height = height;
+            
         }
 
         public Field(int width, int height, string fileName)
