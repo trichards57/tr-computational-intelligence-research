@@ -84,6 +84,8 @@ namespace MultiAgentConsole
 
             var xmlSnapshotIntervalParameter = new Parameter<int>("xi", -1, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "The interval that an XML snapshot should be taken at. -1 disables the snapshots.", FriendlyName = "XML Snapshot Interval" };
 
+            var disableCacheParameter = new Parameter<bool>("dc", false, s => bool.Parse(s)) { Description = "A boolean (true/false) specifying if the program should cache map data.", FriendlyName = "Disable Cache" };
+
             parameterManager.RegisterParameter(dataFileParameter);
             parameterManager.RegisterParameter(cacheFileParameter);
             parameterManager.RegisterParameter(outputFileParameter);
@@ -98,6 +100,7 @@ namespace MultiAgentConsole
             parameterManager.RegisterParameter(outputSummeryParameter);
             parameterManager.RegisterParameter(batchModeParameter);
             parameterManager.RegisterParameter(xmlSnapshotIntervalParameter);
+            parameterManager.RegisterParameter(disableCacheParameter);
 
             try
             {
@@ -130,6 +133,7 @@ namespace MultiAgentConsole
             var outputSummaryFile = outputSummeryParameter.Value;
             var batchMode = batchModeParameter.Value;
             var xmlSnapshotInterval = xmlSnapshotIntervalParameter.Value;
+            var disableCache = disableCacheParameter.Value;
 
             if (!File.Exists(dataFile))
             {
@@ -141,7 +145,7 @@ namespace MultiAgentConsole
 
             Console.WriteLine("Loading data file...");
             Field field;
-            if (File.Exists(cacheFile) && File.GetLastWriteTimeUtc(cacheFile) > File.GetLastWriteTimeUtc(dataFile))
+            if (!disableCache && File.Exists(cacheFile) && File.GetLastWriteTimeUtc(cacheFile) > File.GetLastWriteTimeUtc(dataFile))
             {
                 Console.WriteLine("Loading data from cache...");
                 var deserializer = new XmlSerializer(typeof(Field));
