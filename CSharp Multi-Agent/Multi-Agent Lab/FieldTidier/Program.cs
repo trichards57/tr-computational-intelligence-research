@@ -69,7 +69,7 @@ namespace FieldTidier
 
             var outStream = XmlWriter.Create(@"C:\Users\Tony\Documents\CIResearch\CSharp Multi-Agent\Multi-Agent Lab\MultiAgentConsole\bin\Debug\field.xml", options);
             deserializer.Serialize(outStream, field);
-            stream.Close();
+            outStream.Close();
         }
     }
 }

@@ -44,7 +44,7 @@ namespace MultiAgentLibrary
         public const int SuccessPheromoneLevel = 1000;
         public const int PheromoneDecayRate = (SuccessPheromoneLevel) / 1000;
 
-        public const uint MaxPheromoneLevel = uint.MaxValue;
+        public const long MaxPheromoneLevel = long.MaxValue;
 
         public FieldSquare()
         {
@@ -81,7 +81,7 @@ namespace MultiAgentLibrary
         }
 
         [XmlIgnore]
-        public uint PheromoneLevel
+        public long PheromoneLevel
         {
             get
             {
@@ -109,7 +109,7 @@ namespace MultiAgentLibrary
                         PheromoneLevel = 0;
                         break;
                     case SquareType.Destination:
-                        PheromoneLevel = uint.MaxValue;
+                        PheromoneLevel = long.MaxValue;
                         break;
                     default:
                         PheromoneLevel = 1;

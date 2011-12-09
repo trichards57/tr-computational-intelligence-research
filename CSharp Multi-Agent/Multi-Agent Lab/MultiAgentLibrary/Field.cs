@@ -64,7 +64,7 @@ namespace MultiAgentLibrary
         [XmlArrayItem("FS")]
         public FieldSquare[] Squares { get; set; }
 
-        internal uint[] PheromoneLevels;
+        internal long[] PheromoneLevels;
         internal SquareType[] SquareTypes;
         internal object[] LockObjects;
 
@@ -91,7 +91,7 @@ namespace MultiAgentLibrary
         {
             var totalIndex = width * height;
             Squares = new FieldSquare[totalIndex];
-            PheromoneLevels = new uint[totalIndex];
+            PheromoneLevels = new long[totalIndex];
             SquareTypes = new SquareType[totalIndex];
             LockObjects = new object[totalIndex];
 
@@ -208,10 +208,9 @@ namespace MultiAgentLibrary
         {
             Parallel.ForEach(AgentsList, agent => agent.Process(this));
 
-            Parallel.ForEach(Squares.Where(square => square.PheromoneLevel > 1 && square.SquareType == SquareType.Passable),
-                square =>
+            Parallel.For(0, PheromoneLevels.Length, i =>
                 {
-                    square.PheromoneLevel -= FieldSquare.PheromoneDecayRate;
+                    PheromoneLevels[i] -= FieldSquare.PheromoneDecayRate;
                 });
         }
     }

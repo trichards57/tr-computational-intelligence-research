@@ -59,12 +59,7 @@ namespace MultiAgentConsole
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
             Console.WriteLine("Multi-Agent Lab Console : {0}", assemblyVersion.ToString(3));
             Console.WriteLine("#############################################################################\n");
-            if (args.Length < 1)
-            {
-                WriteInstructions();
-                return 1;
-            }
-
+            
             var dataFileParameter = new Parameter<string>("d", null, s => s) { Description = "The filename of a CSV file containing sensor readings.", FriendlyName = "Sensor Data File", Required = true };
             var cacheFileParameter = new Parameter<string>("cf", "field.xml", s => s) { Description = "The filename of an XML file to use as a cache for the processed sensor readings.", FriendlyName = "Sensor Data Cache File" };
             var outputFileParameter = new Parameter<string>("of", "route.csv", s => s) { Description = "The filename of a CSV file containing the output route.", FriendlyName = "Route File" };
@@ -84,7 +79,7 @@ namespace MultiAgentConsole
 
             var xmlSnapshotIntervalParameter = new Parameter<int>("xi", -1, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "The interval that an XML snapshot should be taken at. -1 disables the snapshots.", FriendlyName = "XML Snapshot Interval" };
 
-            var disableCacheParameter = new Parameter<bool>("dc", false, s => bool.Parse(s)) { Description = "A boolean (true/false) specifying if the program should cache map data.", FriendlyName = "Disable Cache" };
+            var disableCacheParameter = new Parameter<bool>("dc", true, s => bool.Parse(s)) { Description = "A boolean (true/false) specifying if the program should cache map data.", FriendlyName = "Disable Cache" };
 
             parameterManager.RegisterParameter(dataFileParameter);
             parameterManager.RegisterParameter(cacheFileParameter);
@@ -287,7 +282,7 @@ namespace MultiAgentConsole
                 {
                     var writer = new XmlSerializer(typeof(SnapshotCollection));
                     writer.Serialize(file, snapshotList);
-                    file.Close();
+                    file.Flush();
                 }
             }
 
