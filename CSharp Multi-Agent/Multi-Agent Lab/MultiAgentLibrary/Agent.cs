@@ -36,7 +36,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Diagnostics;
-using System.Threading;
 
 namespace MultiAgentLibrary
 {
@@ -85,26 +84,19 @@ namespace MultiAgentLibrary
             if (currentSquare.SquareType == SquareType.Destination)
             {
                 var sizeScale = (1000 / pastRoute.Count) * 0.1;
-
-                foreach (var p in pastRoute)
+                lock (field)
                 {
-                    var s = field.Squares[p.X + field.Width * p.Y];
-                    lock (s.LockObject)
-                        s.PheromoneLevel += (long)(FieldSquare.SuccessPheromoneLevel * sizeScale);
-                }
-
-
-                if (pastRoute.Count < field.ShortestRoute.Count || field.ShortestRoute.Count == 0)
-                {
-                    lock (field)
+                    foreach (var p in pastRoute)
                     {
-                        if (pastRoute.Count < field.ShortestRoute.Count || field.ShortestRoute.Count == 0)
-                        {
-                            field.ShortestRoute.Clear();
-                            foreach (var p in pastRoute)
-                                field.ShortestRoute.Add(p);
-                            Console.WriteLine("Agent Route Length : {0}", pastRoute.Count);
-                        }
+                        field.Squares[p.X + field.Width * p.Y].PheromoneLevel += (uint)(FieldSquare.SuccessPheromoneLevel * sizeScale);
+                    }
+
+                    if (pastRoute.Count < field.ShortestRoute.Count || field.ShortestRoute.Count == 0)
+                    {
+                        field.ShortestRoute.Clear();
+                        foreach (var p in pastRoute)
+                            field.ShortestRoute.Add(p);
+                        Console.WriteLine("Agent Route Length : {0}", pastRoute.Count);
                     }
                 }
 
@@ -161,7 +153,7 @@ namespace MultiAgentLibrary
                 foreach (var r in subList)
                     pastRouteHash.Remove(r);
                 pastRoute.RemoveRange(index + 1, pastRoute.Count - (index + 1));
-
+                
             }
             else
             {

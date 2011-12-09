@@ -64,10 +64,6 @@ namespace MultiAgentLibrary
         [XmlArrayItem("FS")]
         public FieldSquare[] Squares { get; set; }
 
-        internal long[] PheromoneLevels;
-        internal SquareType[] SquareTypes;
-        internal object[] LockObjects;
-
         [XmlAttribute]
         public int Width { get; set; }
 
@@ -89,26 +85,17 @@ namespace MultiAgentLibrary
         public Field(int width, int height)
             : this()
         {
-            var totalIndex = width * height;
-            Squares = new FieldSquare[totalIndex];
-            PheromoneLevels = new long[totalIndex];
-            SquareTypes = new SquareType[totalIndex];
-            LockObjects = new object[totalIndex];
-
-            for (var i = 0; i < LockObjects.Length; i++)
-                LockObjects[i] = new object();
-
-            Width = width;
-            Height = height;
+            Squares = new FieldSquare[width * height];
 
             for (var x = 0; x < width; x++)
             {
                 for (var y = 0; y < height; y++)
                 {
-                    Squares[x + y * width] = new FieldSquare(new Point(x, y), this);
+                    Squares[x + y * width] = new FieldSquare(new Point(x, y));
                 }
             }
-            
+            Width = width;
+            Height = height;
         }
 
         public Field(int width, int height, string fileName)
@@ -208,9 +195,10 @@ namespace MultiAgentLibrary
         {
             Parallel.ForEach(AgentsList, agent => agent.Process(this));
 
-            Parallel.For(0, PheromoneLevels.Length, i =>
+            Parallel.ForEach(Squares.Where(square => square.PheromoneLevel > 1 && square.SquareType == SquareType.Passable),
+                square =>
                 {
-                    PheromoneLevels[i] -= FieldSquare.PheromoneDecayRate;
+                    square.PheromoneLevel -= FieldSquare.PheromoneDecayRate;
                 });
         }
     }
