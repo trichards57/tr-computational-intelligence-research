@@ -33,17 +33,14 @@
 //***********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-
+using System.Threading.Tasks;
+using System.Xml.Serialization;
 namespace MultiAgentLibrary
 {
-    using System.Drawing;
-    using System.Threading.Tasks;
-    using System.Globalization;
-    using System.Xml.Serialization;
-
     [XmlRoot]
     public class Field
     {

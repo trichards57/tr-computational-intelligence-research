@@ -32,30 +32,32 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //***********************************************************************
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Xml;
+using System.Xml.Serialization;
 using MultiAgentLibrary;
-
 using UsefulClasses;
-using System.Globalization;
+using UsefulClasses.Exceptions;
 
 namespace MultiAgentConsole
 {
-    using System.Diagnostics;
-    using System.Collections.Generic;
-    using System.Xml.Serialization;
-    using System.Xml;
-    using UsefulClasses.Exceptions;
-
+// ReSharper disable ClassNeverInstantiated.Global
     internal sealed class Program
+// ReSharper restore ClassNeverInstantiated.Global
     {
-        static ParameterManager parameterManager = new ParameterManager();
+        static readonly ParameterManager ParameterManager = new ParameterManager();
 
         static int Main(string[] args)
         {
+            const double epsilon = 0.1;
+
             var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
             Console.WriteLine("Multi-Agent Lab Console : {0}", assemblyVersion.ToString(3));
             Console.WriteLine("#############################################################################\n");
@@ -75,31 +77,31 @@ namespace MultiAgentConsole
 
             var outputSummeryParameter = new Parameter<string>("os", null, s => s) { Description = "The filename of an XML file used to store the output data for batch mode.", FriendlyName = "Output Summary File" };
 
-            var batchModeParameter = new Parameter<bool>("bm", false, s => bool.Parse(s)) { Description = "A boolean (true/false) specifying if the program should run in no-wait mode.", FriendlyName = "Batch Mode" };
+            var batchModeParameter = new Parameter<bool>("bm", false, bool.Parse) { Description = "A boolean (true/false) specifying if the program should run in no-wait mode.", FriendlyName = "Batch Mode" };
 
             var xmlSnapshotIntervalParameter = new Parameter<int>("xi", -1, s => int.Parse(s, CultureInfo.InvariantCulture)) { Description = "The interval that an XML snapshot should be taken at. -1 disables the snapshots.", FriendlyName = "XML Snapshot Interval" };
 
-            var disableCacheParameter = new Parameter<bool>("dc", true, s => bool.Parse(s)) { Description = "A boolean (true/false) specifying if the program should cache map data.", FriendlyName = "Disable Cache" };
+            var disableCacheParameter = new Parameter<bool>("dc", false, bool.Parse) { Description = "A boolean (true/false) specifying if the program should cache map data.", FriendlyName = "Disable Cache" };
 
-            parameterManager.RegisterParameter(dataFileParameter);
-            parameterManager.RegisterParameter(cacheFileParameter);
-            parameterManager.RegisterParameter(outputFileParameter);
-            parameterManager.RegisterParameter(outputImageParameter);
-            parameterManager.RegisterParameter(mapWidthParameter);
-            parameterManager.RegisterParameter(mapHeightParameter);
-            parameterManager.RegisterParameter(maxAgentsParameter);
-            parameterManager.RegisterParameter(startAgentsParameter);
-            parameterManager.RegisterParameter(cycleCountParameter);
-            parameterManager.RegisterParameter(memoryLengthParameter);
-            parameterManager.RegisterParameter(snapshotIntervalParameter);
-            parameterManager.RegisterParameter(outputSummeryParameter);
-            parameterManager.RegisterParameter(batchModeParameter);
-            parameterManager.RegisterParameter(xmlSnapshotIntervalParameter);
-            parameterManager.RegisterParameter(disableCacheParameter);
+            ParameterManager.RegisterParameter(dataFileParameter);
+            ParameterManager.RegisterParameter(cacheFileParameter);
+            ParameterManager.RegisterParameter(outputFileParameter);
+            ParameterManager.RegisterParameter(outputImageParameter);
+            ParameterManager.RegisterParameter(mapWidthParameter);
+            ParameterManager.RegisterParameter(mapHeightParameter);
+            ParameterManager.RegisterParameter(maxAgentsParameter);
+            ParameterManager.RegisterParameter(startAgentsParameter);
+            ParameterManager.RegisterParameter(cycleCountParameter);
+            ParameterManager.RegisterParameter(memoryLengthParameter);
+            ParameterManager.RegisterParameter(snapshotIntervalParameter);
+            ParameterManager.RegisterParameter(outputSummeryParameter);
+            ParameterManager.RegisterParameter(batchModeParameter);
+            ParameterManager.RegisterParameter(xmlSnapshotIntervalParameter);
+            ParameterManager.RegisterParameter(disableCacheParameter);
 
             try
             {
-                parameterManager.ProcessParameters(args);
+                ParameterManager.ProcessParameters(args);
             }
             catch (InvalidParameterException ex)
             {
@@ -136,7 +138,7 @@ namespace MultiAgentConsole
                 return 2;
             }
 
-            Console.WriteLine(parameterManager.GenerateParameterStatusMessage());
+            Console.WriteLine(ParameterManager.GenerateParameterStatusMessage());
 
             Console.WriteLine("Loading data file...");
             Field field;
@@ -182,17 +184,17 @@ namespace MultiAgentConsole
 
                 if (frameSkip != -1 && i % frameSkip == 0)
                 {
-                    var oImage = new System.Drawing.Bitmap(mapWidth * 10, mapHeight * 10);
-                    using (var graphics = System.Drawing.Graphics.FromImage(oImage))
+                    var oImage = new Bitmap(mapWidth * 10, mapHeight * 10);
+                    using (var graphics = Graphics.FromImage(oImage))
                     {
                         foreach (var square in field.Squares)
                         {
                             var col = square.SquareColour;
-                            graphics.FillRectangle(new SolidBrush(col), (int)square.Position.X * 10, (int)square.Position.Y * 10, 10, 10);
+                            graphics.FillRectangle(new SolidBrush(col), square.Position.X * 10, square.Position.Y * 10, 10, 10);
                         }
                         foreach (var agent in field.AgentsList)
                         {
-                            graphics.FillEllipse(Brushes.Yellow, (int)agent.Position.X * 10, (int)agent.Position.Y * 10, 10, 10);
+                            graphics.FillEllipse(Brushes.Yellow, agent.Position.X * 10, agent.Position.Y * 10, 10, 10);
                         }
                     }
 
@@ -243,10 +245,10 @@ namespace MultiAgentConsole
 
             var result = new List<PointF>();
 
-            for (var i = 0; i < scaledData.Count; i++)
+            foreach (PointF t in scaledData)
             {
                 if (result.Count < 2)
-                    result.Add(scaledData[i]);
+                    result.Add(t);
                 else
                 {
                     var p1 = result[result.Count - 2];
@@ -255,14 +257,14 @@ namespace MultiAgentConsole
                     var m = (p1.Y - p2.Y) / (p1.X - p2.X);
                     var c = p1.Y - m * p1.X;
 
-                    if (float.IsInfinity(m) && scaledData[i].X == p1.X)
-                        result[result.Count - 1] = scaledData[i];
-                    else if (m == 0 && scaledData[i].Y == p1.Y)
-                        result[result.Count - 1] = scaledData[i];
-                    else if (m * scaledData[i].X + c == scaledData[i].Y)
-                        result[result.Count - 1] = scaledData[i];
+                    if (float.IsInfinity(m) && Math.Abs(t.X - p1.X) < epsilon)
+                        result[result.Count - 1] = t;
+                    else if (Math.Abs(m - 0) < epsilon && Math.Abs(t.Y - p1.Y) < epsilon)
+                        result[result.Count - 1] = t;
+                    else if (Math.Abs(m * t.X + c - t.Y) < epsilon)
+                        result[result.Count - 1] = t;
                     else
-                        result.Add(scaledData[i]);
+                        result.Add(t);
                 }
             }
 
@@ -294,7 +296,7 @@ namespace MultiAgentConsole
 
         static void WriteInstructions()
         {
-            Console.WriteLine(parameterManager.GenerateCommandLineUsageMessage("MultiAgentConsole.exe"));
+            Console.WriteLine(ParameterManager.GenerateCommandLineUsageMessage("MultiAgentConsole.exe"));
 
             Console.WriteLine("Press ENTER to exit...");
 
