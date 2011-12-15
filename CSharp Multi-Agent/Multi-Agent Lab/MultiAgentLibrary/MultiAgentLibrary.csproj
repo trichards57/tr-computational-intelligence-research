@@ -44,7 +44,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Agent.cs" />
-    <Compile Include="Direction.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="FieldSquare.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

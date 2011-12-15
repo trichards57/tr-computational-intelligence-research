@@ -1,14 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
 using MultiAgentLibrary;
 
 namespace MultiAgentUI
@@ -18,20 +15,17 @@ namespace MultiAgentUI
     /// </summary>
     public class Game1 : Game
     {
-        private GameTime lastTime;
         private Field field;
 
-        GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
         private Texture2D square;
         private Texture2D agent;
 
-        private const int memoryLength = 16;
+        private const int MemoryLength = 16;
 
         public Game1()
         {
-            graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
         }
 
@@ -43,10 +37,31 @@ namespace MultiAgentUI
         /// </summary>
         protected override void Initialize()
         {
-            field = new Field(100, 100, @"C:\Users\Tony\Documents\tr-computational-intelligence-research\sensorData.csv");
+            const string cacheFile = "cache.xml";
+            const string dataFile = @"C:\Users\Tony\Documents\tr-computational-intelligence-research\sensorData.csv";
+            const int mapWidth = 100;
+            const int mapHeight = 100;
+
+            if (File.Exists(cacheFile) && File.GetLastWriteTimeUtc(cacheFile) > File.GetLastWriteTimeUtc(dataFile))
+            {
+                Console.WriteLine("Loading data from cache...");
+                var deserializer = new XmlSerializer(typeof(Field));
+                var stream = XmlReader.Create(cacheFile);
+                field = (Field)deserializer.Deserialize(stream);
+                stream.Close();
+            }
+            else
+            {
+                field = new Field(mapWidth, mapHeight, dataFile);
+                Console.WriteLine("Caching field data...");
+                var serializer = new XmlSerializer(typeof(Field));
+                var stream = XmlWriter.Create(cacheFile);
+                serializer.Serialize(stream, field);
+                stream.Close();
+            }
 
             for (var i = 0; i < 10; i++)
-                field.AgentsList.Add(new Agent(field.StartPoint, memoryLength));
+                field.AgentsList.Add(new Agent(field.StartPoint, MemoryLength));
 
             base.Initialize();
         }
@@ -84,10 +99,10 @@ namespace MultiAgentUI
         {
             // Allows the game to exit
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
-                this.Exit();
+                Exit();
 
             if (field.AgentsList.Count < 250)
-                field.AgentsList.Add(new Agent(field.StartPoint, memoryLength));
+                field.AgentsList.Add(new Agent(field.StartPoint, MemoryLength));
 
             field.CycleAgents();
 

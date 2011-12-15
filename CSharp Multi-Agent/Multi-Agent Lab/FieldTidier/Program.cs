@@ -33,18 +33,18 @@
 //***********************************************************************
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Drawing;
 using System.Xml;
 using System.Xml.Serialization;
 using MultiAgentLibrary;
-using System.Drawing;
 
 namespace FieldTidier
 {
+// ReSharper disable ClassNeverInstantiated.Global
     internal sealed class Program
+// ReSharper restore ClassNeverInstantiated.Global
     {
-        static void Main(string[] args)
+        static void Main()
         {
             var options = new XmlWriterSettings { Indent = true, IndentChars = "  ", NewLineChars = Environment.NewLine };
             var deserializer = new XmlSerializer(typeof(Field));

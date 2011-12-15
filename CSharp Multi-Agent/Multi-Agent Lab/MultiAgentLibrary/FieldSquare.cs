@@ -44,11 +44,13 @@ namespace MultiAgentLibrary
 
         private uint pheromoneLevel;
 
-        public const uint MaxPheromoneLevel = uint.MaxValue;
+        private const uint MaxPheromoneLevel = uint.MaxValue;
 
         private readonly object lockObject = new object();
 
+// ReSharper disable UnusedMember.Global
         public FieldSquare()
+// ReSharper restore UnusedMember.Global
         {
         }
 
@@ -59,7 +61,9 @@ namespace MultiAgentLibrary
         }
 
         [XmlElement("POS")]
+// ReSharper disable MemberCanBePrivate.Global
         public Point Position { get; set; }
+// ReSharper restore MemberCanBePrivate.Global
 
         [XmlIgnore]
         public Color SquareColour

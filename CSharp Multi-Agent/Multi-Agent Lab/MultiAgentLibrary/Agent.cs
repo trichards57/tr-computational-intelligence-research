@@ -43,11 +43,9 @@ namespace MultiAgentLibrary
     {
         private readonly Point startPosition;
 
-        public Point Position { get; set; }
+        public Point Position { get; private set; }
 
-        public bool FoundEnd { get; set; }
-
-        public int ShortTermMemoryLength { get; set; }
+        private int ShortTermMemoryLength { get; set; }
 
         private readonly List<Point> pastRoute = new List<Point>();
         private readonly HashSet<Point> pastRouteHash = new HashSet<Point>();
@@ -59,7 +57,6 @@ namespace MultiAgentLibrary
             Position = startPosition;
             ShortTermMemoryLength = memoryLength;
             this.startPosition = startPosition;
-            FoundEnd = false;
         }
 
         public void Process(Field field)
@@ -83,7 +80,7 @@ namespace MultiAgentLibrary
 
             if (currentSquare.SquareType == SquareType.Destination)
             {
-                var sizeScale = (1000 / pastRoute.Count) * 0.1;
+                var sizeScale = (1000.0 / pastRoute.Count) * 0.1;
                 lock (field)
                 {
                     foreach (var p in pastRoute)
@@ -111,16 +108,16 @@ namespace MultiAgentLibrary
                 var squares = new[] { field.Squares[currentIndex - field.Width], // Square above
                                       field.Squares[currentIndex + field.Width], // Square below
                                       field.Squares[currentIndex - 1],           // Square to the left
-                                      field.Squares[currentIndex + 1],           // Square to the right
+                                      field.Squares[currentIndex + 1]           // Square to the right
 
                                       /*field.Squares[currentIndex - field.Width - 1], // Square above and to the left
                                       field.Squares[currentIndex - field.Width + 1], // Square above and to the right
                                       field.Squares[currentIndex + field.Width - 1], // Square below and to the left
-                                      field.Squares[currentIndex + field.Width + 1], // Square below and to the right*/
+                                      field.Squares[currentIndex + field.Width + 1] // Square below and to the right*/
                 };
 
                 var biasedSquares = squares.Select(s => new { Square = s, Bias = (recentSquares.Contains(s.Position)) ? 0.25 : 1.0 });
-                var weightedSquares = biasedSquares.Select(s => new { Square = s.Square, Weight = s.Bias * s.Square.PheromoneLevel }).ToList();
+                var weightedSquares = biasedSquares.Select(s => new { s.Square, Weight = s.Bias * s.Square.PheromoneLevel }).ToList();
                 var totalWeight = weightedSquares.Sum(s => s.Weight);
 
                 var randNum = rand.NextDouble() * totalWeight;
@@ -132,10 +129,7 @@ namespace MultiAgentLibrary
                         Position = s.Square.Position;
                         break;
                     }
-                    else
-                    {
-                        randNum -= s.Weight;
-                    }
+                    randNum -= s.Weight;
                 }
 
                 RememberRoute(currentSquare.Position);
@@ -153,7 +147,7 @@ namespace MultiAgentLibrary
                 foreach (var r in subList)
                     pastRouteHash.Remove(r);
                 pastRoute.RemoveRange(index + 1, pastRoute.Count - (index + 1));
-                
+
             }
             else
             {
