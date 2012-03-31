@@ -24,6 +24,8 @@ namespace MultiAgentUI
 
         private const int MemoryLength = 16;
 
+        private bool initDone;
+
         public Game1()
         {
             Content.RootDirectory = "Content";
@@ -38,7 +40,7 @@ namespace MultiAgentUI
         protected override void Initialize()
         {
             const string cacheFile = "cache.xml";
-            const string dataFile = @"C:\Users\Tony\Documents\tr-computational-intelligence-research\sensorData.csv";
+            const string dataFile = @"D:\Users\Tony\Documents\tr-computational-intelligence-research\sensorData.csv";
             const int mapWidth = 100;
             const int mapHeight = 100;
 
@@ -79,6 +81,8 @@ namespace MultiAgentUI
             agent = Content.Load<Texture2D>("agent");
 
             // TODO: use this.Content to load your game content here
+
+            initDone = true;
         }
 
         /// <summary>
@@ -115,6 +119,9 @@ namespace MultiAgentUI
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
+            if (!initDone)
+                return;
+
             GraphicsDevice.Clear(Color.Black);
 
             Debug.WriteLine("Frame time {0}", 1 / gameTime.ElapsedGameTime.TotalSeconds);
