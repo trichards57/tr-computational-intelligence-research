@@ -10,9 +10,7 @@ using UsefulClasses.Exceptions;
 
 namespace MultiAgentBatch
 {
-// ReSharper disable ClassNeverInstantiated.Global
     class Program
-// ReSharper restore ClassNeverInstantiated.Global
     {
         static readonly ParameterManager ParameterManager = new ParameterManager();
 
@@ -69,36 +67,39 @@ namespace MultiAgentBatch
 
             var snaps = new SnapshotCollection();
 
-            for (var iteration = 0; iteration < 200; iteration++)
+            for (var agentCount = 100; agentCount < 2000; agentCount += 100)
             {
-
-                var processData = new ProcessStartInfo(consolePath)
-                                      {
-                                          Arguments =
-                                              string.Format("/d:{0} /os:output.xml /bm:true /xi:1000 /c:50000", dataFile)
-                                      };
-
-                var process = Process.Start(processData);
-
-                process.WaitForExit();
-
-                var reader = new XmlSerializer(typeof(SnapshotCollection));
-                using (var f = File.OpenRead("output.xml"))
+                for (var iteration = 0; iteration < 200; iteration++)
                 {
-                    var snapshots = reader.Deserialize(f) as SnapshotCollection;
-                    Debug.Assert(snapshots != null, "Snapshots must deserialize properly.");
-                    snaps.Snapshots.AddRange(snapshots.Snapshots);
+
+                    var processData = new ProcessStartInfo(consolePath)
+                                          {
+                                              Arguments =
+                                                  string.Format("/d:{0} /os:output.xml /bm:true /ma:{1} /xi:1000 /c:20000", dataFile, agentCount)
+                                          };
+
+                    var process = Process.Start(processData);
+
+                    process.WaitForExit();
+
+                    var reader = new XmlSerializer(typeof(SnapshotCollection));
+                    using (var f = File.OpenRead("output.xml"))
+                    {
+                        var snapshots = reader.Deserialize(f) as SnapshotCollection;
+                        Debug.Assert(snapshots != null, "Snapshots must deserialize properly.");
+                        snaps.Snapshots.AddRange(snapshots.Snapshots);
+                    }
+
+                    //using (var file = File.Open("output.xml", FileMode.Open, FileAccess.Read))
+                    //{
+                    //    var doc = new XmlDocument();
+                    //    doc.Load(file);
+                    //    var child = doc.DocumentElement.FirstChild;
+                    //    outputWriter.WriteRaw(child.OuterXml);
+                    //}
+
+                    Console.WriteLine("Iteration {0} complete.", iteration);
                 }
-
-                //using (var file = File.Open("output.xml", FileMode.Open, FileAccess.Read))
-                //{
-                //    var doc = new XmlDocument();
-                //    doc.Load(file);
-                //    var child = doc.DocumentElement.FirstChild;
-                //    outputWriter.WriteRaw(child.OuterXml);
-                //}
-
-                Console.WriteLine("Iteration {0} complete.", iteration);
             }
             using (var outputStream = File.Open(outputFile, FileMode.Create, FileAccess.Write))
             {

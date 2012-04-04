@@ -207,7 +207,7 @@ namespace MultiAgentConsole
                 {
                     if (outputSummaryFile != null)
                     {
-                        snapshotList.Snapshots.Add(new Snapshot { CycleCount = i, RouteLength = field.ShortestRoute.Count });
+                        snapshotList.Snapshots.Add(new Snapshot { CycleCount = i, RouteLength = field.ShortestRoute.Count, AgentCount = field.AgentsList.Count });
                     }
                 }
             }
