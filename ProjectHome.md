@@ -1,0 +1,1 @@
+Personal research in to computational intelligence.  Related to the University of Bath Computational Intelligence course.
